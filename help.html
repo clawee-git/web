@@ -184,15 +184,19 @@
         <h2>Slash commands</h2>
         <p>Inside the composer (<kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
         <div class="cmds">
-          <div class="row"><code>/upload</code><span class="d">Upload a file to the session (also: paste a file path or drop a file).</span></div>
-          <div class="row"><code>/name</code><span class="d">Rename the <b>remote</b> pty (and the composebox tag).</span></div>
-          <div class="row"><code>/relays</code><span class="d">Open the relay picker for the live session.</span></div>
-          <div class="row"><code>/history</code><span class="d">Show the remote command history.</span></div>
-          <div class="row"><code>/session</code><span class="d">Return to the session picker.</span></div>
-          <div class="row"><code>/detach</code><span class="d">Detach (the remote session keeps running).</span></div>
-          <div class="row"><code>/lock</code><span class="d">Lock the screen.</span></div>
-          <div class="row"><code>/clear</code><span class="d">Clear the screen.</span></div>
-          <div class="row"><code>/quit</code><span class="d">Quit clawee.</span></div>
+          <div class="row"><code>/upload</code><span class="d">Send a file to the session — <code>/upload &lt;path&gt;</code> (also: paste a path or drop a file).</span></div>
+          <div class="row"><code>/download</code><span class="d">Fetch a remote file or dir to your machine — <code>/download &lt;path&gt;</code>.</span></div>
+          <div class="row"><code>/name</code><span class="d">Set the session's display name — renames the <b>remote</b> pty.</span></div>
+          <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ select · K/J reorder · s skip · u pin · a auto · p probe.</span></div>
+          <div class="row"><code>/settings</code><span class="d">Show or set client upload limits — <code>/settings [max-upload|async-upload &lt;size&gt;]</code>.</span></div>
+          <div class="row"><code>/history</code><span class="d">Open this session's full scrollback (q to quit).</span></div>
+          <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions.</span></div>
+          <div class="row"><code>/restart</code><span class="d">Restart the attached session in place.</span></div>
+          <div class="row"><code>/reconnect</code><span class="d">Force a reconnect now.</span></div>
+          <div class="row"><code>/detach</code><span class="d">Drop back to the session picker (the remote session keeps running).</span></div>
+          <div class="row"><code>/lock</code><span class="d">Lock the screen now — <code>/lock [&lt;passphrase&gt;]</code>.</span></div>
+          <div class="row"><code>/passphrase</code><span class="d">Set or clear the lock passphrase (masked entry).</span></div>
+          <div class="row"><code>/quit</code><span class="d">Exit clawee.</span></div>
         </div>
         <p style="margin-top:18px; color:var(--dim)">
           Stuck? <code>clawee doctor</code> diagnoses the chain, and <code>clawee status</code> shows

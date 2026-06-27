@@ -91,6 +91,7 @@ header {
 }
 .brand img { width: 28px; height: 28px; display: block; }
 .brand .dot { color: var(--accent); }
+.brand:hover { text-decoration: none; }
 .nav .spacer { flex: 1; }
 .nav a.link { color: var(--muted); font-size: 14px; letter-spacing: 0.02em; }
 .nav a.link:hover { color: var(--ink); text-decoration: none; }
@@ -169,6 +170,34 @@ h1 .g { color: var(--accent); }
 .term-body .o { color: var(--muted); }         /* output */
 .term-body .ok { color: var(--accent); }
 .term-body .mut { color: var(--dim); }
+
+/* hero mini session-picker — real CSS box (no fragile ASCII alignment) */
+.term-body .picker {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  margin: 9px 0 4px;
+  overflow: hidden;
+}
+.term-body .picker .ph,
+.term-body .picker .pr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+}
+.term-body .picker .ph {
+  color: var(--muted);
+  background: var(--bg-bar);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.term-body .picker .ph .gw { color: var(--dim); }
+.term-body .picker .pr .sel { color: var(--accent); }
+.term-body .picker .pr .name { color: var(--ink); }
+.term-body .picker .pr .name.dim { color: var(--dim); }
+.term-body .picker .pr .st-live { color: var(--accent); }
+.term-body .picker .pr .st-dead { color: var(--dim); }
 
 .hero-grid {
   display: grid;
@@ -274,7 +303,7 @@ p strong, li strong { color: var(--ink); font-weight: 600; }
 .cmds { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .cmds .row { display: grid; grid-template-columns: 1fr; gap: 2px; background: var(--bg-panel); padding: 13px 16px; }
 @media (min-width: 680px) { .cmds .row { grid-template-columns: 240px 1fr; gap: 16px; align-items: baseline; } }
-.cmds .row code { color: var(--accent); font-size: 13.5px; white-space: nowrap; }
+.cmds .row code { color: var(--accent); font-size: 13.5px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .cmds .row .d { color: var(--muted); font-size: 13.5px; }
 .cmds .row .d b { color: var(--ink); font-weight: 600; }
 .grp { color: var(--dim); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; margin: 26px 0 12px; }
