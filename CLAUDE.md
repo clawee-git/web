@@ -34,4 +34,4 @@ existing terminal aesthetic. Verify rendering in a browser before claiming done.
 No `Co-Authored-By` / "Generated with Claude" commit trailers; commit/push only
 when asked.
 
-- **Version badge:** `index.html` carries a `<span class="ver">v0.1.63</span>` next to the Install heading. Bump it on every `clawee` release (and bump `style.css?v=N` if styles change so the edge cache refreshes).
+- **Version badge:** `index.html` carries a `<span class="ver">v0.1.64</span>` next to the Install heading. Bump it on every `clawee` release (and bump `style.css?v=N` if styles change so the edge cache refreshes).
