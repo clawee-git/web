@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee — docs</title>
+  <meta name="description" content="Install clawee, pair a device, and the full command reference. clawee runs on top of the burrowee transport.">
+  <link rel="icon" type="image/svg+xml" href="assets/clawee-icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="index.html">
+        <img src="assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="index.html">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap help-layout">
+    <!-- TOC -->
+    <nav class="toc">
+      <p class="t">Contents</p>
+      <ul>
+        <li><a href="#requirements">Requirements</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#pairing">Pairing a device</a></li>
+        <li><a href="#attach">Attaching</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="#gateways">Gateways</a></li>
+        <li><a href="#keys">In-session keys</a></li>
+        <li><a href="#slash">Slash commands</a></li>
+      </ul>
+    </nav>
+
+    <div class="doc">
+      <!-- REQUIREMENTS -->
+      <section id="requirements">
+        <p class="section-h">Before you start</p>
+        <h2>Requirements</h2>
+        <p>
+          clawee is a <strong>client</strong> — it runs on top of
+          <a href="https://burrowee.com"><strong>burrowee</strong></a>, the transport that carries
+          your connection to the remote box. You need two things:
+        </p>
+        <ul class="tight">
+          <li><strong>burrowee installed</strong> — get it at <a href="https://burrowee.com">burrowee.com</a>. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).</li>
+          <li><strong>a paired gateway</strong> — your device must be bootstrapped against at least one burrowee gateway (see <a href="#pairing">pairing</a>). Without a gateway binding there's no route, and clawee will tell you so.</li>
+        </ul>
+        <div class="callout">
+          <strong>Why burrowee?</strong> clawee deliberately owns no transport of its own. burrowee
+          handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the
+          terminal — sessions, the picker, uploads, the composer. Learn more at
+          <a href="https://burrowee.com">burrowee.com</a>.
+        </div>
+        <p>Supported clients: macOS and Linux. A box that <em>hosts</em> sessions also runs <code>claweed</code> (the session broker).</p>
+      </section>
+
+      <!-- INSTALL -->
+      <section id="install">
+        <p class="section-h">Setup</p>
+        <h2>Install</h2>
+        <p>Both installers are fetched over TLS and signature-verified before anything executes (served from <code>release.clawee.org</code>).</p>
+
+        <p class="grp">Client — your laptop / workstation</p>
+        <div class="cmd" style="margin-bottom:16px; max-width:660px">
+          <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
+          <button class="copy" data-copy="curl -fsSL https://release.clawee.org/clawee/install.sh | sh">copy</button>
+        </div>
+
+        <p class="grp">Daemon — boxes that host sessions</p>
+        <div class="cmd" style="margin-bottom:16px; max-width:660px">
+          <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/claweed/install.sh | sh</code>
+          <button class="copy" data-copy="curl -fsSL https://release.clawee.org/claweed/install.sh | sh">copy</button>
+        </div>
+
+        <p>Keep clawee current any time with:</p>
+        <pre><span class="p">$</span> clawee update            <span class="mut"># shows the version gap; skips if current</span>
+<span class="p">$</span> clawee update --force    <span class="mut"># reinstall the latest regardless</span></pre>
+      </section>
+
+      <!-- PAIRING -->
+      <section id="pairing">
+        <p class="section-h">Setup</p>
+        <h2>Pairing a device</h2>
+        <p>
+          Pairing happens in <a href="https://burrowee.com">burrowee</a> — it binds this device to a
+          gateway. Get a one-time <strong>blob</strong> and <strong>PIN</strong> from your burrowee
+          console, then:
+        </p>
+        <pre><span class="p">$</span> burrowee bootstrap &lt;blob&gt; &lt;pin&gt;</pre>
+        <p>
+          That gives clawee a route. On first connect, clawee presents its <strong>device key</strong>
+          to the remote daemon. A brand-new key isn't trusted yet — it <em>knocks</em>, and you approve
+          it from a device that's already enrolled:
+        </p>
+        <pre><span class="p">$</span> clawee devices            <span class="mut"># list enrolled keys + pending knocks</span>
+<span class="p">$</span> clawee devices approve &lt;fp&gt;   <span class="mut"># enroll a pending device key</span></pre>
+        <div class="callout">
+          If a connection is refused as <strong>pending approval</strong>, <code>clawee status</code>
+          prints the exact <code>clawee devices approve …</code> line to run — no copying fingerprints by hand.
+        </div>
+      </section>
+
+      <!-- ATTACHING -->
+      <section id="attach">
+        <p class="section-h">Daily use</p>
+        <h2>Attaching</h2>
+        <p>Run <code>clawee</code> with no arguments to open the session picker and attach. Flags tune the bare invocation:</p>
+        <div class="cmds">
+          <div class="row"><code>clawee</code><span class="d">Open the local session picker and attach.</span></div>
+          <div class="row"><code>clawee &lt;gateway&gt;</code><span class="d">Select a gateway by name, then pick a session (see <a href="#gateways">gateways</a>).</span></div>
+          <div class="row"><code>-r</code><span class="d"><b>Resume</b> the most-recently-attached session.</span></div>
+          <div class="row"><code>-s &lt;sid&gt;</code><span class="d">Attach a remote pty <b>session id</b> directly.</span></div>
+          <div class="row"><code>-user &lt;name&gt;</code><span class="d">Gateway OS user to claim (default: <code>$USER</code>, or last-used).</span></div>
+          <div class="row"><code>-i &lt;key&gt;</code><span class="d">Private key to authenticate with (default: ssh-agent, then <code>~/.clawee/id_ed25519</code>).</span></div>
+          <div class="row"><code>-socket &lt;path&gt;</code><span class="d">burrowee transport daemon socket (default: the burrowee default).</span></div>
+          <div class="row"><code>-transport &lt;mode&gt;</code><span class="d">Force transport: <code>auto</code> | <code>ws</code> | <code>quic</code>.</span></div>
+        </div>
+      </section>
+
+      <!-- COMMANDS -->
+      <section id="commands">
+        <p class="section-h">Reference</p>
+        <h2>Commands</h2>
+        <p>Every <code>clawee &lt;command&gt;</code> verb:</p>
+        <div class="cmds">
+          <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth.</span></div>
+          <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
+          <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve</code>/<code>revoke &lt;fp&gt;</code>).</span></div>
+          <div class="row"><code>relays &lt;list|probe|priority|skip|use&gt;</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens an interactive picker.</span></div>
+          <div class="row"><code>gw [list|name …]</code><span class="d">Gateways: group local sessions by gateway; <code>list</code>; <code>name</code> a gateway.</span></div>
+          <div class="row"><code>doctor [--fix]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can.</span></div>
+          <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
+          <div class="row"><code>lock-passphrase</code><span class="d">Set the idle-lock passphrase in the local config.</span></div>
+          <div class="row"><code>version</code><span class="d">Print the clawee version (also <code>--version</code>).</span></div>
+          <div class="row"><code>help</code><span class="d">Print the full help (also <code>--help</code>, <code>-h</code>).</span></div>
+        </div>
+      </section>
+
+      <!-- GATEWAYS -->
+      <section id="gateways">
+        <p class="section-h">Reference</p>
+        <h2>Gateways</h2>
+        <p>
+          When your device is paired to more than one gateway, clawee scopes everything per gateway —
+          sessions, relays, and the OS user. Pick one by short name, fall back to the chooser, or set
+          friendly names.
+        </p>
+        <div class="cmds">
+          <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
+          <div class="row"><code>clawee gw</code><span class="d">List local sessions <b>grouped by gateway</b>, with live/dead state.</span></div>
+          <div class="row"><code>clawee gw list</code><span class="d">List all paired gateways with session counts.</span></div>
+          <div class="row"><code>clawee gw name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
+        </div>
+        <p style="margin-top:16px">
+          With a single gateway, none of this shows — <code>clawee</code> goes straight to the picker.
+          With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
+          <kbd>g</kbd> in the picker to switch.
+        </p>
+      </section>
+
+      <!-- KEYS -->
+      <section id="keys">
+        <p class="section-h">Reference</p>
+        <h2>In-session keys</h2>
+        <p>Once attached, keystrokes pass through to the remote shell except:</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the idle-lock passphrase).</span></div>
+          <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen.</span></div>
+          <div class="row"><code><kbd>g</kbd></code><span class="d">In the session picker (not while attached): open the gateway chooser.</span></div>
+        </div>
+      </section>
+
+      <!-- SLASH -->
+      <section id="slash">
+        <p class="section-h">Reference</p>
+        <h2>Slash commands</h2>
+        <p>Inside the composer (<kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
+        <div class="cmds">
+          <div class="row"><code>/upload</code><span class="d">Upload a file to the session (also: paste a file path or drop a file).</span></div>
+          <div class="row"><code>/name</code><span class="d">Rename the <b>remote</b> pty (and the composebox tag).</span></div>
+          <div class="row"><code>/relays</code><span class="d">Open the relay picker for the live session.</span></div>
+          <div class="row"><code>/history</code><span class="d">Show the remote command history.</span></div>
+          <div class="row"><code>/session</code><span class="d">Return to the session picker.</span></div>
+          <div class="row"><code>/detach</code><span class="d">Detach (the remote session keeps running).</span></div>
+          <div class="row"><code>/lock</code><span class="d">Lock the screen.</span></div>
+          <div class="row"><code>/clear</code><span class="d">Clear the screen.</span></div>
+          <div class="row"><code>/quit</code><span class="d">Quit clawee.</span></div>
+        </div>
+        <p style="margin-top:18px; color:var(--dim)">
+          Stuck? <code>clawee doctor</code> diagnoses the chain, and <code>clawee status</code> shows
+          exactly where a connection stops.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="index.html" style="gap:9px">
+        <img src="assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="index.html">Home</a>
+      <a href="#install">Install</a>
+      <a href="https://burrowee.com">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

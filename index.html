@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee — your terminal, anywhere</title>
+  <meta name="description" content="clawee is a fast, resumable remote-shell client. Persistent PTY sessions across machines and gateways, over the burrowee transport.">
+  <link rel="icon" type="image/svg+xml" href="assets/clawee-icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <meta property="og:title" content="clawee — your terminal, anywhere">
+  <meta property="og:description" content="A fast, resumable remote-shell client over the burrowee transport.">
+  <meta property="og:type" content="website">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="help.html">Docs</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="#install">Install</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow reveal d1">remote shell client</p>
+          <h1 class="reveal d2">Your terminal,<br><span class="g">anywhere</span><span class="cursor"></span></h1>
+          <p class="lede reveal d3">
+            <strong>clawee</strong> attaches a live shell on any of your machines and keeps it.
+            Sessions survive disconnects, reboots, and network roams — pick one back up exactly
+            where you left it, from any device.
+          </p>
+          <div class="hero-actions reveal d4">
+            <a class="btn btn-primary" href="#install">Install clawee</a>
+            <a class="btn btn-ghost" href="help.html">Read the docs →</a>
+          </div>
+        </div>
+
+        <div class="term reveal d3" aria-hidden="true">
+          <div class="term-bar">
+            <span class="b"></span><span class="b"></span><span class="b g"></span>
+            <span class="t">clawee — ~</span>
+          </div>
+          <div class="term-body">
+<div class="ln"><span class="p">❯</span> <span class="c">clawee</span></div>
+<div class="ln o">  ┌ clawee — work (d4e5f6…) ──── g:gw ┐</div>
+<div class="ln o">  │ <span class="ok">▸ deploy</span>     ● live          │</div>
+<div class="ln o">  │   api        ○ dead          │</div>
+<div class="ln o">  │ + new session                 │</div>
+<div class="ln o">  └───────────────────────────────┘</div>
+<div class="ln">&nbsp;</div>
+<div class="ln"><span class="p">❯</span> <span class="c">clawee status</span></div>
+<div class="ln o">  socket    <span class="ok">✓</span>   daemon  <span class="ok">✓</span></div>
+<div class="ln o">  relay     <span class="ok">✓</span>   claweed <span class="ok">✓</span>   auth <span class="ok">✓</span></div>
+<div class="ln mut">  preferred node-a (prio 1, lan)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install">
+      <div class="wrap">
+        <p class="section-h">Install</p>
+        <h2>One command. Signed installer.</h2>
+        <p style="max-width:62ch">
+          The installer is fetched over TLS and verified before anything runs.
+          clawee needs <a href="https://burrowee.com">burrowee</a> and a paired gateway —
+          see <a href="help.html#requirements">requirements</a>.
+        </p>
+        <div class="cmd" style="margin:18px 0 10px; max-width:640px">
+          <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
+          <button class="copy" data-copy="curl -fsSL https://release.clawee.org/clawee/install.sh | sh">copy</button>
+        </div>
+        <p class="mut" style="color:var(--dim); font-size:13.5px">
+          Hosting sessions on a box? Install the daemon too:
+          <code>release.clawee.org/claweed/install.sh</code> — full steps in the
+          <a href="help.html#install">docs</a>.
+        </p>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section>
+      <div class="wrap">
+        <p class="section-h">How it works</p>
+        <h2>clawee rides the burrowee transport.</h2>
+        <p style="max-width:64ch">
+          clawee is the client. It speaks to your local <a href="https://burrowee.com">burrowee</a>
+          daemon, which carries the connection through a gateway and relay to
+          <strong>claweed</strong> — the session broker on the remote box.
+        </p>
+        <div class="flow" style="margin-top:18px">
+          <span class="node">you</span><span class="arr">→</span>
+          <span class="node">burrowee&nbsp;daemon</span><span class="arr">→</span>
+          <span class="rem">gateway</span><span class="arr">→</span>
+          <span class="rem">relay</span><span class="arr">→</span>
+          <span class="node">claweed</span>
+          <span style="color:var(--dim)">&nbsp;(remote box)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section>
+      <div class="wrap">
+        <p class="section-h">Why clawee</p>
+        <div class="cards">
+          <div class="card">
+            <span class="k">resumable</span>
+            <h3>Sessions that stay put</h3>
+            <p>Detach, lose Wi-Fi, reboot your laptop — the remote shell keeps running. <code>clawee -r</code> resumes the last one.</p>
+          </div>
+          <div class="card">
+            <span class="k">multi-gateway</span>
+            <h3>Many machines, one client</h3>
+            <p>Pair several gateways and switch between them — <code>clawee work</code>, or press <kbd>g</kbd> in the picker. Sessions stay grouped per gateway.</p>
+          </div>
+          <div class="card">
+            <span class="k">secure</span>
+            <h3>Device-key auth</h3>
+            <p>Every stream authenticates with your device key; new devices knock and are approved. The private key never has to touch disk (ssh-agent).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="help.html">Docs</a>
+      <a href="help.html#install">Install</a>
+      <a href="https://burrowee.com">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

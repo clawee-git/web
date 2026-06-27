@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="circle"><circle cx="512" cy="512" r="512"/></clipPath>
+  </defs>
+  <!-- the square icon, circle-clipped (transparent corners) -->
+  <g clip-path="url(#circle)">
+    <rect x="0" y="0" width="1024" height="1024" fill="#0F172A"/>
+    <g transform="translate(0 -102)">
+      <!-- prompt-claw: two curved talons converging into a chevron -->
+      <path d="M288.5 337.6 Q423.5 385.7 532 492 Q397.9 442.1 255.5 410.4 A40 40 0 0 1 288.5 337.6 Z" fill="#F7F8FF"/>
+      <path d="M286.9 655.1 Q421.4 614.3 532 514 Q398.3 556.8 257.1 580.9 A40 40 0 0 0 286.9 655.1 Z" fill="#F7F8FF"/>
+      <!-- session screen with output lines -->
+      <rect x="620" y="412" width="172" height="200" rx="30" fill="#4ADE80"/>
+      <rect x="648" y="452" width="84" height="18" rx="9" fill="#0F172A"/>
+      <rect x="648" y="492" width="116" height="18" rx="9" fill="#0F172A"/>
+      <rect x="648" y="532" width="64" height="18" rx="9" fill="#0F172A"/>
+      <!-- input line / ground -->
+      <rect x="232" y="691" width="560" height="60" rx="30" fill="#F7F8FF"/>
+    </g>
+  </g>
+</svg>
