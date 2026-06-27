@@ -221,6 +221,20 @@ h1 .g { color: var(--accent); }
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent); text-decoration: none; }
 
+/* version badge (bumped per release — see CLAUDE.md) */
+.ver {
+  display: inline-block;
+  font-size: 0.42em;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  letter-spacing: 0.04em;
+  transform: translateY(-2px);
+}
+
 /* copyable command */
 .cmd {
   display: flex; align-items: center; gap: 12px;

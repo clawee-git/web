@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=2">
+  <link rel="stylesheet" href="/style.css?v=3">
   <meta property="og:title" content="clawee — docs">
   <meta property="og:description" content="Install clawee, pair a device, and the full command reference. clawee runs on the burrowee transport.">
   <meta property="og:type" content="website">
@@ -48,6 +48,7 @@
         <li><a href="#commands">Commands</a></li>
         <li><a href="#gateways">Gateways</a></li>
         <li><a href="#keys">In-session keys</a></li>
+        <li><a href="#composer">Composer editing</a></li>
         <li><a href="#slash">Slash commands</a></li>
       </ul>
     </nav>
@@ -189,6 +190,25 @@
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the idle-lock passphrase).</span></div>
           <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen.</span></div>
           <div class="row"><code><kbd>g</kbd></code><span class="d">In the session picker (not while attached): open the gateway chooser.</span></div>
+        </div>
+      </section>
+
+      <!-- COMPOSER -->
+      <section id="composer">
+        <p class="section-h">Reference</p>
+        <h2>Composer editing</h2>
+        <p>Keys inside the command composer (opened with <kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>Enter</kbd> · <kbd>Shift</kbd>+<kbd>Enter</kbd></code><span class="d">Send the line · insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty).</span></div>
+          <div class="row"><code><kbd>←</kbd> / <kbd>→</kbd></code><span class="d">Move the cursor one character.</span></div>
+          <div class="row"><code><kbd>Home</kbd>/<kbd>End</kbd> · <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd></code><span class="d">Jump to the current <b>line</b> start / end.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Home</kbd>/<kbd>End</kbd></code><span class="d">Jump to the <b>buffer</b> start / end (on a Mac laptop: <kbd>Fn</kbd>+<kbd>Ctrl</kbd>+<kbd>←</kbd>/<kbd>→</kbd>).</span></div>
+          <div class="row"><code><kbd>↑</kbd> / <kbd>↓</kbd></code><span class="d">Move between lines; at the top/bottom edge, recall command history.</span></div>
+          <div class="row"><code><kbd>Backspace</kbd> / <kbd>Del</kbd></code><span class="d">Delete before / after the cursor.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>U</kbd></code><span class="d">Kill to line end / to line start.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>L</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Clear the current line · clear the box (stays open).</span></div>
+          <div class="row"><code><kbd>Tab</kbd></code><span class="d">Complete the <code>/command</code>.</span></div>
+          <div class="row"><code><kbd>Esc</kbd> · <kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Close the composer.</span></div>
         </div>
       </section>
 
