@@ -19,7 +19,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 # Exactly the served surface — never ship repo meta, ops, or deploy scripts.
-FILES=(index.html help.html style.css script.js assets)
+FILES=(index.html docs style.css script.js assets)
 
 echo "→ deploying clawee.org to ${HOST}:${STATIC_DIR}"
 ssh "$HOST" "mkdir -p '$STATIC_DIR'"

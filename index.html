@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>clawee — your terminal, anywhere</title>
   <meta name="description" content="clawee is a fast, resumable remote-shell client. Persistent PTY sessions across machines and gateways, over the burrowee transport.">
-  <link rel="icon" type="image/svg+xml" href="assets/clawee-icon.svg">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="stylesheet" href="/style.css?v=2">
   <meta property="og:title" content="clawee — your terminal, anywhere">
   <meta property="og:description" content="A fast, resumable remote-shell client over the burrowee transport.">
   <meta property="og:type" content="website">
@@ -15,11 +15,11 @@
   <header>
     <div class="wrap nav">
       <a class="brand" href="/">
-        <img src="assets/clawee-icon.svg" alt="">
+        <img src="/assets/clawee-icon.svg" alt="">
         <span>clawee<span class="dot">_</span></span>
       </a>
       <span class="spacer"></span>
-      <a class="link" href="help.html">Docs</a>
+      <a class="link" href="/docs">Docs</a>
       <a class="link" href="https://burrowee.com">burrowee</a>
       <a class="cta" href="#install">Install</a>
     </div>
@@ -39,7 +39,7 @@
           </p>
           <div class="hero-actions reveal d4">
             <a class="btn btn-primary" href="#install">Install clawee</a>
-            <a class="btn btn-ghost" href="help.html">Read the docs →</a>
+            <a class="btn btn-ghost" href="/docs">Read the docs →</a>
           </div>
         </div>
 
@@ -73,8 +73,8 @@
         <h2>One command. Signed installer.</h2>
         <p style="max-width:62ch">
           The installer is fetched over TLS and verified before anything runs.
-          clawee needs <a href="https://burrowee.com">burrowee</a> and a paired gateway —
-          see <a href="help.html#requirements">requirements</a>.
+          clawee needs <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> and a paired gateway —
+          see <a href="/docs#requirements">requirements</a>.
         </p>
         <div class="cmd" style="margin:18px 0 10px; max-width:640px">
           <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
@@ -83,7 +83,7 @@
         <p class="mut" style="color:var(--dim); font-size:13.5px">
           Hosting sessions on a box? Install the daemon too:
           <code>release.clawee.org/claweed/install.sh</code> — full steps in the
-          <a href="help.html#install">docs</a>.
+          <a href="/docs#install">docs</a>.
         </p>
       </div>
     </section>
@@ -94,7 +94,7 @@
         <p class="section-h">How it works</p>
         <h2>clawee rides the burrowee transport.</h2>
         <p style="max-width:64ch">
-          clawee is the client. It speaks to your local <a href="https://burrowee.com">burrowee</a>
+          clawee is the client. It speaks to your local <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
           daemon, which carries the connection through a relay and gateway to
           <strong>claweed</strong> — the session broker on the remote box.
         </p>
@@ -137,16 +137,16 @@
   <footer>
     <div class="wrap foot">
       <a class="brand" href="/" style="gap:9px">
-        <img src="assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
         <span style="font-size:14px">clawee</span>
       </a>
       <span class="spacer"></span>
-      <a href="help.html">Docs</a>
-      <a href="help.html#install">Install</a>
-      <a href="https://burrowee.com">burrowee</a>
+      <a href="/docs">Docs</a>
+      <a href="/docs#install">Install</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
     </div>
   </footer>
 
-  <script src="script.js?v=2"></script>
+  <script src="/script.js?v=2"></script>
 </body>
 </html>

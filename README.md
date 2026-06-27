@@ -3,7 +3,7 @@
 The clawee marketing + docs site — a static, self-contained two-page site.
 
 - `index.html` — home: intro, install one-liner, how-it-works, why-clawee.
-- `help.html` — docs: requirements (burrowee), install, pairing, full command reference.
+- `docs/index.html` — docs: requirements (burrowee), install, pairing, full command reference.
 - `style.css` — the terminal-themed design system (dark slate, terminal-green accent).
 - `script.js` — copy-to-clipboard for command snippets (no dependencies).
 - `assets/` — brand icon/mark (from `clawee-git/resources/brand`).

@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>clawee — docs</title>
   <meta name="description" content="Install clawee, pair a device, and the full command reference. clawee runs on top of the burrowee transport.">
-  <link rel="icon" type="image/svg+xml" href="assets/clawee-icon.svg">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
   <header>
     <div class="wrap nav">
-      <a class="brand" href="index.html">
-        <img src="assets/clawee-icon.svg" alt="">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
         <span>clawee<span class="dot">_</span></span>
       </a>
       <span class="spacer"></span>
-      <a class="link" href="index.html">Home</a>
+      <a class="link" href="/">Home</a>
       <a class="link" href="https://burrowee.com">burrowee</a>
       <a class="cta" href="#install">Install</a>
     </div>
@@ -45,18 +45,18 @@
         <h2>Requirements</h2>
         <p>
           clawee is a <strong>client</strong> — it runs on top of
-          <a href="https://burrowee.com"><strong>burrowee</strong></a>, the transport that carries
+          <a href="https://burrowee.com" target="_blank" rel="noopener"><strong>burrowee</strong></a>, the transport that carries
           your connection to the remote box. You need two things:
         </p>
         <ul class="tight">
-          <li><strong>burrowee installed</strong> — get it at <a href="https://burrowee.com">burrowee.com</a>. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).</li>
+          <li><strong>burrowee installed</strong> — get it at <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee.com</a>. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).</li>
           <li><strong>a paired gateway</strong> — your device must be bootstrapped against at least one burrowee gateway (see <a href="#pairing">pairing</a>). Without a gateway binding there's no route, and clawee will tell you so.</li>
         </ul>
         <div class="callout">
           <strong>Why burrowee?</strong> clawee deliberately owns no transport of its own. burrowee
           handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the
           terminal — sessions, the picker, uploads, the composer. Learn more at
-          <a href="https://burrowee.com">burrowee.com</a>.
+          <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee.com</a>.
         </div>
         <p>Supported clients: macOS and Linux. A box that <em>hosts</em> sessions also runs <code>claweed</code> (the session broker).</p>
       </section>
@@ -89,7 +89,7 @@
         <p class="section-h">Setup</p>
         <h2>Pairing a device</h2>
         <p>
-          Pairing happens in <a href="https://burrowee.com">burrowee</a> — it binds this device to a
+          Pairing happens in <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> — it binds this device to a
           gateway. Get a one-time <strong>blob</strong> and <strong>PIN</strong> from your burrowee
           console, then:
         </p>
@@ -208,17 +208,17 @@
 
   <footer>
     <div class="wrap foot">
-      <a class="brand" href="index.html" style="gap:9px">
-        <img src="assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
         <span style="font-size:14px">clawee</span>
       </a>
       <span class="spacer"></span>
-      <a href="index.html">Home</a>
+      <a href="/">Home</a>
       <a href="#install">Install</a>
-      <a href="https://burrowee.com">burrowee</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
     </div>
   </footer>
 
-  <script src="script.js?v=2"></script>
+  <script src="/script.js?v=2"></script>
 </body>
 </html>
