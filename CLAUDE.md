@@ -18,7 +18,11 @@
   CLI surface changes. Install one-liners point at `release.clawee.org`
   (`clawee` client + `claweed` daemon). All burrowee references link to
   https://burrowee.com.
-- Deploy target (domain/host) is TBD — the output is deploy-ready static files.
+- **LIVE at https://clawee.org** — served static from nsm (Cloudflare Full-strict).
+  Re-deploy content any time with `deploy/deploy.sh` (rsync → nsm). The one-time
+  host activation (cert via snap certbot `--dns-cloudflare`, vhost in
+  `sites-enabled`) is done; full runbook in `ops/README.md`. `www.clawee.org` has
+  no DNS yet (cert covers it; the vhost 301s www→apex when a record is added).
 
 ## Core principles
 
