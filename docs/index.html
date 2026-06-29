@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=3">
+  <link rel="stylesheet" href="/style.css?v=4">
   <meta property="og:title" content="clawee — docs">
   <meta property="og:description" content="Install clawee, pair a device, and the full command reference. clawee runs on the burrowee transport.">
   <meta property="og:type" content="website">
@@ -104,21 +104,49 @@
         <p class="section-h">Setup</p>
         <h2>Pairing a device</h2>
         <p>
-          Pairing happens in <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> — it binds this device to a
-          gateway. Get a one-time <strong>blob</strong> and <strong>PIN</strong> from your burrowee
-          console, then:
+          Two things have to line up: a <strong>route</strong> — <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> binds your
+          device to a gateway — and <strong>trust</strong> — your clawee <strong>device key</strong> is
+          enrolled on the box running <code>claweed</code>. clawee and claweed usually live on
+          <em>different</em> machines, so the first device is enrolled by hand on the host; extra
+          devices can then be approved remotely.
         </p>
-        <pre><span class="p">$</span> burrowee bootstrap &lt;blob&gt; &lt;pin&gt;</pre>
-        <p>
-          That gives clawee a route. On first connect, clawee presents its <strong>device key</strong>
-          to the remote daemon. A brand-new key isn't trusted yet — it <em>knocks</em>, and you approve
-          it from a device that's already enrolled:
-        </p>
-        <pre><span class="p">$</span> clawee devices            <span class="mut"># list enrolled keys + pending knocks</span>
-<span class="p">$</span> clawee devices approve &lt;fp&gt;   <span class="mut"># enroll a pending device key</span></pre>
+        <ol class="steps">
+          <li>
+            <span class="st">Bind to a gateway — the route</span>
+            <p>In your <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> console, mint a one-time <strong>blob</strong> + <strong>PIN</strong>, then on the client:</p>
+            <pre><span class="p">$</span> burrowee bootstrap &lt;blob&gt; &lt;pin&gt;</pre>
+            <p>This is transport only — it carries no trust on its own.</p>
+          </li>
+          <li>
+            <span class="st">Get your device key</span>
+            <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. Create it and read the public half:</p>
+            <pre><span class="p">$</span> clawee status                <span class="mut"># generates the key; shows the chain + fingerprint</span>
+<span class="p">$</span> cat ~/.clawee/id_ed25519.pub  <span class="mut"># the public key to enroll</span></pre>
+          </li>
+          <li>
+            <span class="st">Send the public key to the host</span>
+            <p>Copy that <code>id_ed25519.pub</code> line to the box running <code>claweed</code> — paste it, <code>scp</code> it, however you like. Only the <em>public</em> key travels.</p>
+          </li>
+          <li>
+            <span class="st">Enroll it on the host</span>
+            <p>On the claweed box, register the key for your tenant. It enrolls under the host OS user you run it as — add <code>--user &lt;name&gt;</code> to target another (then connect with clawee's <code>-user &lt;name&gt;</code>):</p>
+            <pre><span class="p">$</span> claweed auth @id_ed25519.pub         <span class="mut"># from a file</span>
+<span class="p">$</span> claweed auth "ssh-ed25519 AAAA… "   <span class="mut"># or paste the key inline</span></pre>
+          </li>
+          <li>
+            <span class="st">Connect</span>
+            <p>Back on the client, open the picker and attach:</p>
+            <pre><span class="p">$</span> clawee</pre>
+          </li>
+        </ol>
         <div class="callout">
-          If a connection is refused as <strong>pending approval</strong>, <code>clawee status</code>
-          prints the exact <code>clawee devices approve …</code> line to run — no copying fingerprints by hand.
+          <strong>Additional devices — approve remotely (optional).</strong> Once one device is
+          enrolled you don't need host access for the next one: the new device <em>knocks</em> (it
+          connects, gets refused as <strong>pending approval</strong>), then you approve it from the
+          already-enrolled device — <code>clawee status</code> prints the exact line to run.
+          <pre style="margin:10px 0 0"><span class="p">$</span> clawee devices                <span class="mut"># enrolled keys + pending knocks</span>
+<span class="p">$</span> clawee devices approve &lt;fp&gt;    <span class="mut"># enroll a pending device key</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;     <span class="mut"># remove a key or drop a knock</span></pre>
         </div>
       </section>
 
