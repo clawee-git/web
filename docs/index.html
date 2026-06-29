@@ -94,9 +94,15 @@
           <button class="copy" data-copy="curl -fsSL https://release.clawee.org/claweed/install.sh | sh">copy</button>
         </div>
 
-        <p>Keep clawee current any time with:</p>
+        <p>Each component updates itself with its own <code>update</code> — it re-runs the matching signed installer and skips when already current:</p>
+
+        <p class="grp">Client — clawee</p>
         <pre><span class="p">$</span> clawee update            <span class="mut"># shows the version gap; skips if current</span>
 <span class="p">$</span> clawee update --force    <span class="mut"># reinstall the latest regardless</span></pre>
+
+        <p class="grp">Daemon — claweed</p>
+        <pre><span class="p">$</span> claweed update           <span class="mut"># shows the version gap; skips if current</span>
+<span class="p">$</span> claweed update --force   <span class="mut"># reinstall the latest regardless</span></pre>
       </section>
 
       <!-- PAIRING -->
