@@ -34,4 +34,4 @@ existing terminal aesthetic. Verify rendering in a browser before claiming done.
 No `Co-Authored-By` / "Generated with Claude" commit trailers; commit/push only
 when asked.
 
-- **Version badge:** `index.html` carries a `<span class="ver">v0.1.64</span>` next to the Install heading. Bump it on every `clawee` release (and bump `style.css?v=N` if styles change so the edge cache refreshes).
+- **Version badge:** `index.html` carries a `<span class="ver">v0.1.80</span>` next to the Install heading. It **auto-updates at runtime** — `script.js` loads `https://release.clawee.org/clawee/version.js` (JSONP `__claweeVersion({version,…})`, sourced from the R2 `latest.json` catalog) and rewrites every `.ver` span. The hardcoded value is only the **fallback** if the channel is unreachable, so you no longer need to bump it per release (keep it roughly current for the no-JS case). Bump the `script.js?v=N` / `style.css?v=N` query when those files change so the edge cache refreshes.
