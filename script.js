@@ -30,7 +30,11 @@ window.__claweeVersion = function (d) {
 };
 (function () {
   var s = document.createElement("script");
-  s.src = "https://release.clawee.org/clawee/version.js";
+  // Hourly cache-buster: the query changes once per clock hour, so a returning
+  // visitor picks up a new release within the hour even though the CF edge
+  // caches version.js for up to 4h. Stable WITHIN the hour → CF still serves a
+  // single cached copy per hour (no cache-thrash).
+  s.src = "https://release.clawee.org/clawee/version.js?" + Math.floor(Date.now() / 3600000);
   s.async = true;
   s.referrerPolicy = "no-referrer";
   document.head.appendChild(s);
