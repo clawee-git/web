@@ -1,5 +1,6 @@
 // clawee.org — copy-to-clipboard for command snippets. No dependencies.
 document.querySelectorAll(".copy").forEach(function (btn) {
+  btn.setAttribute("aria-live", "polite"); // announce the "copied" feedback to screen readers
   btn.addEventListener("click", function () {
     var text = btn.getAttribute("data-copy") || "";
     navigator.clipboard.writeText(text).then(function () {
@@ -23,9 +24,11 @@ document.querySelectorAll(".copy").forEach(function (btn) {
 // manual bump. The hardcoded <span class="ver"> in index.html is the fallback if the
 // script is blocked or the channel is unreachable.
 window.__claweeVersion = function (d) {
-  if (!d || !d.version) return;
+  // Trust the payload only if it looks like a version string (JSONP runs foreign code
+  // paths; never write anything that isn't a plain semver-ish string).
+  if (!d || typeof d.version !== "string" || !/^v?\d+\.\d+\.\d+/.test(d.version)) return;
   document.querySelectorAll(".ver").forEach(function (el) {
-    el.textContent = "v" + d.version;
+    el.textContent = "v" + d.version.replace(/^v/, "");
   });
 };
 (function () {

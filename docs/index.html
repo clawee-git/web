@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=4">
+  <link rel="stylesheet" href="/style.css?v=5">
   <meta property="og:title" content="clawee — docs">
   <meta property="og:description" content="Install clawee, pair a device, and the full command reference. clawee runs on the burrowee transport.">
   <meta property="og:type" content="website">
@@ -57,7 +57,7 @@
       <!-- REQUIREMENTS -->
       <section id="requirements">
         <p class="section-h">Before you start</p>
-        <h2>Requirements</h2>
+        <h1>Requirements</h1>
         <p>
           clawee is a <strong>client</strong> — it runs on top of
           <a href="https://burrowee.com" target="_blank" rel="noopener"><strong>burrowee</strong></a>, the transport that carries
@@ -145,7 +145,7 @@
           connects, gets refused as <strong>pending approval</strong>), then you approve it from the
           already-enrolled device — <code>clawee status</code> prints the exact line to run.
           <pre style="margin:10px 0 0"><span class="p">$</span> clawee devices                <span class="mut"># enrolled keys + pending knocks</span>
-<span class="p">$</span> clawee devices approve &lt;fp&gt;    <span class="mut"># enroll a pending device key</span>
+<span class="p">$</span> clawee devices approve [--label &lt;x&gt;] &lt;fp&gt;  <span class="mut"># enroll a pending device key</span>
 <span class="p">$</span> clawee devices revoke &lt;fp&gt;     <span class="mut"># remove a key or drop a knock</span></pre>
         </div>
       </section>
@@ -159,6 +159,7 @@
           <div class="row"><code>clawee</code><span class="d">Open the local session picker and attach.</span></div>
           <div class="row"><code>clawee &lt;gateway&gt;</code><span class="d">Select a gateway by name, then pick a session (see <a href="#gateways">gateways</a>).</span></div>
           <div class="row"><code>-r</code><span class="d"><b>Resume</b> the most-recently-attached session.</span></div>
+          <div class="row"><code>-reconnect-timeout &lt;dur&gt;</code><span class="d">Per-attempt <b>reconnect deadline</b> (e.g. <code>5s</code>; default 5s).</span></div>
           <div class="row"><code>-s &lt;sid&gt;</code><span class="d">Attach a remote pty <b>session id</b> directly.</span></div>
           <div class="row"><code>-user &lt;name&gt;</code><span class="d">Gateway OS user to claim (default: <code>$USER</code>, or last-used).</span></div>
           <div class="row"><code>-i &lt;key&gt;</code><span class="d">Private key to authenticate with (default: ssh-agent, then <code>~/.clawee/id_ed25519</code>).</span></div>
@@ -173,12 +174,12 @@
         <h2>Commands</h2>
         <p>Every <code>clawee &lt;command&gt;</code> verb:</p>
         <div class="cmds">
-          <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth.</span></div>
+          <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.</span></div>
           <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
-          <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve</code>/<code>revoke &lt;fp&gt;</code>).</span></div>
+          <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve [--label &lt;x&gt;] &lt;fp&gt;</code> / <code>revoke &lt;fp&gt;</code>).</span></div>
           <div class="row"><code>relays &lt;list|probe|priority|skip|use&gt;</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens an interactive picker.</span></div>
-          <div class="row"><code>gw [list|name …]</code><span class="d">Gateways: group local sessions by gateway; <code>list</code>; <code>name</code> a gateway.</span></div>
-          <div class="row"><code>doctor [--fix]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can.</span></div>
+          <div class="row"><code>gw [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relay drill-down); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>.</span></div>
+          <div class="row"><code>doctor [--fix] [--yes]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can (<code>--yes</code> skips consent prompts).</span></div>
           <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
           <div class="row"><code>lock-passphrase</code><span class="d">Set the idle-lock passphrase in the local config.</span></div>
           <div class="row"><code>version</code><span class="d">Print the clawee version (also <code>--version</code>).</span></div>
@@ -197,14 +198,17 @@
         </p>
         <div class="cmds">
           <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
-          <div class="row"><code>clawee gw</code><span class="d">List local sessions <b>grouped by gateway</b>, with live/dead state.</span></div>
+          <div class="row"><code>clawee gw</code><span class="d">Open the interactive gateway <b>chooser</b> (piped: list local sessions grouped by gateway, with live/dead state).</span></div>
+          <div class="row"><code>clawee gw use &lt;fp|name&gt;</code><span class="d">Switch to that gateway and attach.</span></div>
           <div class="row"><code>clawee gw list</code><span class="d">List all paired gateways with session counts.</span></div>
           <div class="row"><code>clawee gw name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
+          <div class="row"><code>clawee gw user &lt;fp|name&gt; &lt;user&gt;</code><span class="d">Set the per-gateway OS user (<code>-</code> clears the override).</span></div>
         </div>
         <p style="margin-top:16px">
           With a single gateway, none of this shows — <code>clawee</code> goes straight to the picker.
           With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
-          <kbd>g</kbd> in the picker to switch.
+          <kbd>g</kbd> in the picker to switch. In the chooser, <kbd>l</kbd> drills down into the selected
+          gateway's relays and can pin one.
         </p>
       </section>
 
@@ -216,7 +220,7 @@
         <div class="cmds">
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the idle-lock passphrase).</span></div>
-          <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen.</span></div>
+          <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty).</span></div>
           <div class="row"><code><kbd>g</kbd></code><span class="d">In the session picker (not while attached): open the gateway chooser.</span></div>
         </div>
       </section>
@@ -228,15 +232,18 @@
         <p>Keys inside the command composer (opened with <kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
         <div class="cmds">
           <div class="row"><code><kbd>Enter</kbd> · <kbd>Shift</kbd>+<kbd>Enter</kbd></code><span class="d">Send the line · insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty).</span></div>
+          <div class="row"><code>Paste</code><span class="d">Multi-line pastes stay in the box; a pasted <b>file path</b> uploads the file; very large text is uploaded as a file too.</span></div>
           <div class="row"><code><kbd>←</kbd> / <kbd>→</kbd></code><span class="d">Move the cursor one character.</span></div>
           <div class="row"><code><kbd>Home</kbd>/<kbd>End</kbd> · <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd></code><span class="d">Jump to the current <b>line</b> start / end.</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Home</kbd>/<kbd>End</kbd></code><span class="d">Jump to the <b>buffer</b> start / end (on a Mac laptop: <kbd>Fn</kbd>+<kbd>Ctrl</kbd>+<kbd>←</kbd>/<kbd>→</kbd>).</span></div>
           <div class="row"><code><kbd>↑</kbd> / <kbd>↓</kbd></code><span class="d">Move between lines; at the top/bottom edge, recall command history.</span></div>
           <div class="row"><code><kbd>Backspace</kbd> / <kbd>Del</kbd></code><span class="d">Delete before / after the cursor.</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>U</kbd></code><span class="d">Kill to line end / to line start.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Backspace</kbd></code><span class="d">Kill to line start (same as <kbd>Ctrl</kbd>+<kbd>U</kbd>).</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>L</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Clear the current line · clear the box (stays open).</span></div>
           <div class="row"><code><kbd>Tab</kbd></code><span class="d">Complete the <code>/command</code>.</span></div>
           <div class="row"><code><kbd>Esc</kbd> · <kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Close the composer.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen.</span></div>
         </div>
       </section>
 
@@ -246,19 +253,20 @@
         <h2>Slash commands</h2>
         <p>Inside the composer (<kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
         <div class="cmds">
-          <div class="row"><code>/upload</code><span class="d">Send a file to the session — <code>/upload &lt;path&gt;</code> (also: paste a path or drop a file).</span></div>
+          <div class="row"><code>/upload</code><span class="d">Send a file or directory — <code>/upload &lt;path&gt;</code> (also: paste a path or drop a file). Directories go as tar.gz; uploads land in a dated <code>uploads/&lt;date&gt;/…</code> dir on claweed ≥ v0.1.30.</span></div>
           <div class="row"><code>/download</code><span class="d">Fetch a remote file or dir to your machine — <code>/download &lt;path&gt;</code>.</span></div>
           <div class="row"><code>/name</code><span class="d">Set the session's display name — renames the <b>remote</b> pty.</span></div>
           <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ select · K/J reorder · s skip · u pin · a auto · p probe.</span></div>
           <div class="row"><code>/settings</code><span class="d">Show or set client upload limits — <code>/settings [max-upload|async-upload &lt;size&gt;]</code>.</span></div>
-          <div class="row"><code>/history</code><span class="d">Open this session's full scrollback (q to quit).</span></div>
+          <div class="row"><code>/history</code><span class="d">Page the remote session's command history (q to quit).</span></div>
           <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions.</span></div>
           <div class="row"><code>/restart</code><span class="d">Restart the attached session in place.</span></div>
           <div class="row"><code>/reconnect</code><span class="d">Force a reconnect now.</span></div>
+          <div class="row"><code>/refresh</code><span class="d">Repaint the remote screen now (alias <code>/redraw</code>).</span></div>
           <div class="row"><code>/detach</code><span class="d">Drop back to the session picker (the remote session keeps running).</span></div>
           <div class="row"><code>/lock</code><span class="d">Lock the screen now — <code>/lock [&lt;passphrase&gt;]</code>.</span></div>
           <div class="row"><code>/passphrase</code><span class="d">Set or clear the lock passphrase (masked entry).</span></div>
-          <div class="row"><code>/quit</code><span class="d">Exit clawee.</span></div>
+          <div class="row"><code>/quit</code><span class="d">Exit clawee (alias <code>/q</code>).</span></div>
         </div>
         <p style="margin-top:18px; color:var(--dim)">
           Stuck? <code>clawee doctor</code> diagnoses the chain, and <code>clawee status</code> shows
@@ -281,6 +289,6 @@
     </div>
   </footer>
 
-  <script src="/script.js?v=2"></script>
+  <script src="/script.js?v=5"></script>
 </body>
 </html>
