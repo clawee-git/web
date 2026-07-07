@@ -1,0 +1,19 @@
+# clawee
+
+> A fast, resumable remote-shell client: persistent PTY sessions on your machines, attached from anywhere over the burrowee transport.
+
+clawee has two components: the **clawee** client (your laptop/workstation) and the **claweed** daemon (the session broker on boxes that host sessions). It requires burrowee and a paired gateway — clawee owns no transport of its own. Install with `curl -fsSL https://release.clawee.org/clawee/install.sh | sh`; installers are fetched over TLS, signed, and minisign-verified before anything runs.
+
+## Docs
+
+- [Docs](https://clawee.org/docs): requirements, install, pairing, and the full command reference
+- [Full docs as plain text](https://clawee.org/llms-full.txt): the complete reference in one markdown file
+
+## Install
+
+- Client: `curl -fsSL https://release.clawee.org/clawee/install.sh | sh`
+- Daemon (session hosts): `curl -fsSL https://release.clawee.org/claweed/install.sh | sh`
+
+## Related
+
+- [burrowee](https://burrowee.com): the transport clawee runs on — pairing, gateways, relays, the encrypted tunnel

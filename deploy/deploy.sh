@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Deploy the clawee.org static site to the nsm origin.
 #
-# Mirrors the static surface (index.html, help.html, style.css, script.js,
-# assets/) into STATIC_DIR on the host. Idempotent; safe to re-run on every
+# Mirrors the static surface (index.html, docs/, style.css, script.js,
+# llms*.txt, robots.txt, assets/) into STATIC_DIR on the host. Idempotent; safe to re-run on every
 # content change. OPERATOR-run (needs SSH to nsm) — see ops/README.md for the
 # one-time activation (DNS, vhost, cert).
 #
@@ -19,7 +19,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 # Exactly the served surface — never ship repo meta, ops, or deploy scripts.
-FILES=(index.html docs style.css script.js favicon.ico assets)
+FILES=(index.html docs style.css script.js llms.txt llms-full.txt robots.txt favicon.ico assets)
 
 echo "→ deploying clawee.org to ${HOST}:${STATIC_DIR}"
 ssh "$HOST" "mkdir -p '$STATIC_DIR'"

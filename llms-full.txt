@@ -1,0 +1,167 @@
+# clawee — full documentation
+
+> A fast, resumable remote-shell client: persistent PTY sessions on your machines, attached from anywhere over the burrowee transport.
+
+clawee is the client; **claweed** is the session broker on the remote box. clawee speaks to your local burrowee daemon, which carries the connection through a relay and gateway to claweed. Sessions survive disconnects, reboots, and network roams — pick one back up exactly where you left it, from any device.
+
+## Requirements
+
+clawee is a client — it runs on top of **burrowee** (https://burrowee.com), the transport that carries your connection to the remote box. You need two things:
+
+- **burrowee installed** — get it at https://burrowee.com. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).
+- **a paired gateway** — your device must be bootstrapped against at least one burrowee gateway. Without a gateway binding there is no route, and clawee will tell you so.
+
+clawee deliberately owns no transport of its own. burrowee handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the terminal — sessions, the picker, uploads, the composer.
+
+Supported clients: macOS and Linux. A box that *hosts* sessions also runs `claweed` (the session broker).
+
+## Install
+
+Two components, each installed with a one-liner (fetched over TLS and signature-verified from release.clawee.org) and updated in place with its own `update` command.
+
+Client — your laptop / workstation:
+
+    curl -fsSL https://release.clawee.org/clawee/install.sh | sh
+    clawee update            # update in place; skips if current
+    clawee update --force    # reinstall the latest regardless
+
+Daemon — boxes that host sessions:
+
+    curl -fsSL https://release.clawee.org/claweed/install.sh | sh
+    claweed update           # update in place; skips if current
+    claweed update --force   # reinstall the latest regardless
+
+## Pairing a device
+
+Two things have to line up: a **route** — burrowee binds your device to a gateway — and **trust** — your clawee **device key** is enrolled on the box running `claweed`. clawee and claweed usually live on *different* machines, so the first device is enrolled by hand on the host; extra devices can then be approved remotely.
+
+1. **Bind to a gateway — the route.** In your burrowee console, mint a one-time blob + PIN, then on the client:
+
+       burrowee bootstrap <blob> <pin>
+
+   This is transport only — it carries no trust on its own.
+
+2. **Get your device key.** clawee mints `~/.clawee/id_ed25519` the first time it runs; the private key never leaves the client.
+
+       clawee status                 # generates the key; shows the chain + fingerprint
+       cat ~/.clawee/id_ed25519.pub  # the public key to enroll
+
+3. **Send the public key to the host.** Copy that `id_ed25519.pub` line to the box running `claweed` — paste it, `scp` it, however you like. Only the *public* key travels.
+
+4. **Enroll it on the host.** On the claweed box, register the key for your tenant. It enrolls under the host OS user you run it as — add `--user <name>` to target another (then connect with clawee's `-user <name>`):
+
+       claweed auth @id_ed25519.pub        # from a file
+       claweed auth "ssh-ed25519 AAAA… "   # or paste the key inline
+
+5. **Connect.** Back on the client, open the picker and attach:
+
+       clawee
+
+**Additional devices — approve remotely (optional).** Once one device is enrolled you don't need host access for the next one: the new device *knocks* (it connects, gets refused as pending approval), then you approve it from the already-enrolled device — `clawee status` prints the exact line to run.
+
+    clawee devices                              # enrolled keys + pending knocks
+    clawee devices approve [--label <x>] <fp>   # enroll a pending device key
+    clawee devices revoke <fp>                  # remove a key or drop a knock
+
+## Attaching
+
+Run `clawee` with no arguments to open the session picker and attach. Flags tune the bare invocation:
+
+- `clawee` — open the local session picker and attach.
+- `clawee <gateway>` — select a gateway by name, then pick a session (see Gateways).
+- `-r` — resume the most-recently-attached session.
+- `-reconnect-timeout <dur>` — per-attempt reconnect deadline (e.g. `5s`; default 5s).
+- `-s <sid>` — attach a remote pty session id directly.
+- `-user <name>` — gateway OS user to claim (default: `$USER`, or last-used).
+- `-i <key>` — private key to authenticate with (default: ssh-agent, then `~/.clawee/id_ed25519`).
+- `-socket <path>` — burrowee transport daemon socket (default: the burrowee default).
+- `-transport <mode>` — force transport: `auto` | `ws` | `quic`.
+
+## Commands
+
+Every `clawee <command>` verb:
+
+- `status` — probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.
+- `sessions [--watch]` — list the daemon's pty sessions; `--watch` streams live session events.
+- `devices <list|approve|revoke>` — enroll and manage device keys (`approve [--label <x>] <fp>` / `revoke <fp>`).
+- `relays <list|probe|priority|skip|use>` — rank relays (LAN-first); bare `relays` opens an interactive picker.
+- `gw [use|list|name|user …]` — switch gateways (interactive; `l` = relay drill-down); `use <fp|name>`; `list`; `name`/`user <fp|name> <val>`.
+- `doctor [--fix] [--yes]` — diagnose the local setup; `--fix` repairs what it can (`--yes` skips consent prompts).
+- `update [--dry] [--force]` — self-update from release.clawee.org (shows the gap; skips if current).
+- `lock-passphrase` — set the idle-lock passphrase in the local config.
+- `version` — print the clawee version (also `--version`).
+- `help` — print the full help (also `--help`, `-h`).
+
+## Gateways
+
+When your device is paired to more than one gateway, clawee scopes everything per gateway — sessions, relays, and the OS user. Pick one by short name, fall back to the chooser, or set friendly names.
+
+- `clawee <name>` — attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).
+- `clawee gw` — open the interactive gateway chooser (piped: list local sessions grouped by gateway, with live/dead state).
+- `clawee gw use <fp|name>` — switch to that gateway and attach.
+- `clawee gw list` — list all paired gateways with session counts.
+- `clawee gw name <fp|name> <short>` — set a friendly short name for a gateway.
+- `clawee gw user <fp|name> <user>` — set the per-gateway OS user (`-` clears the override).
+
+With a single gateway, none of this shows — `clawee` goes straight to the picker. With more than one, bare `clawee` uses your last gateway or opens the chooser; press `g` in the picker to switch. In the chooser, `l` drills down into the selected gateway's relays and can pin one.
+
+## In-session keys
+
+Once attached, keystrokes pass through to the remote shell except:
+
+- `Ctrl+]` — open the command composer (type a `/command` or text; Enter sends).
+- `Ctrl+\` — lock the screen (unlock with the idle-lock passphrase).
+- `F5` · `Ctrl+[` — redraw the remote screen (`Ctrl+[` needs the kitty keyboard protocol, e.g. Ghostty).
+- `g` — in the session picker (not while attached): open the gateway chooser.
+
+## Composer editing
+
+Keys inside the command composer (opened with `Ctrl+]`):
+
+- `Enter` · `Shift+Enter` — send the line · insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty).
+- Paste — multi-line pastes stay in the box; a pasted file path uploads the file; very large text is uploaded as a file too.
+- `←` / `→` — move the cursor one character.
+- `Home`/`End` · `Ctrl+A`/`E` — jump to the current line start / end.
+- `Ctrl+Home`/`End` — jump to the buffer start / end (on a Mac laptop: `Fn+Ctrl+←`/`→`).
+- `↑` / `↓` — move between lines; at the top/bottom edge, recall command history.
+- `Backspace` / `Del` — delete before / after the cursor.
+- `Ctrl+K` / `Ctrl+U` — kill to line end / to line start.
+- `Ctrl+Backspace` — kill to line start (same as `Ctrl+U`).
+- `Ctrl+L` · `Ctrl+C` — clear the current line · clear the box (stays open).
+- `Tab` — complete the `/command`.
+- `Esc` · `Ctrl+]` — close the composer.
+- `Ctrl+\` — lock the screen.
+
+## Slash commands
+
+Inside the composer (`Ctrl+]`):
+
+- `/upload` — send a file or directory — `/upload <path>` (also: paste a path or drop a file). Directories go as tar.gz; uploads land in a dated `uploads/<date>/…` dir on claweed ≥ v0.1.30.
+- `/download` — fetch a remote file or dir to your machine — `/download <path>`.
+- `/name` — set the session's display name — renames the remote pty.
+- `/relays` — relay priority & skip — ↑↓ select · K/J reorder · s skip · u pin · a auto · p probe.
+- `/settings` — show or set client upload limits — `/settings [max-upload|async-upload <size>]`.
+- `/history` — page the remote session's command history (q to quit).
+- `/version` — show the clawee + claweed build versions.
+- `/restart` — restart the attached session in place.
+- `/reconnect` — force a reconnect now.
+- `/refresh` — repaint the remote screen now (alias `/redraw`).
+- `/detach` — drop back to the session picker (the remote session keeps running).
+- `/lock` — lock the screen now — `/lock [<passphrase>]`.
+- `/passphrase` — set or clear the lock passphrase (masked entry).
+- `/quit` — exit clawee (alias `/q`).
+
+## Update
+
+Both components self-update in place from the signed release channel:
+
+    clawee update             # shows the version gap; skips if current
+    clawee update --dry       # report only
+    clawee update --force     # reinstall the latest regardless
+    claweed update            # same, for the daemon
+
+## Troubleshooting
+
+- `clawee doctor [--fix] [--yes]` diagnoses the local setup and repairs what it can.
+- `clawee status` probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.
+- Docs: https://clawee.org/docs · Transport (pairing, gateways, relays): https://burrowee.com
