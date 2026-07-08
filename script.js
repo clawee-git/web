@@ -26,7 +26,7 @@ document.querySelectorAll(".copy").forEach(function (btn) {
 window.__claweeVersion = function (d) {
   // Trust the payload only if it looks like a version string (JSONP runs foreign code
   // paths; never write anything that isn't a plain semver-ish string).
-  if (!d || typeof d.version !== "string" || !/^v?\d+\.\d+\.\d+/.test(d.version)) return;
+  if (!d || typeof d.version !== "string" || !/^v?\d+\.\d+\.\d+(-[\w.]+)?$/.test(d.version)) return;
   document.querySelectorAll(".ver").forEach(function (el) {
     el.textContent = "v" + d.version.replace(/^v/, "");
   });
