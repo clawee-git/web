@@ -119,8 +119,9 @@
           </li>
           <li>
             <span class="st">Get your device key</span>
-            <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. Create it and read the public half:</p>
-            <pre><span class="p">$</span> clawee status                <span class="mut"># generates the key; shows the chain + fingerprint</span>
+            <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. <code>clawee status</code> guarantees the key exists and prints its fingerprint — or mint it on its own with <code>clawee doctor --fix</code>. Then read the public half:</p>
+            <pre><span class="p">$</span> clawee status                <span class="mut"># brings up the chain; mints the key + shows its fingerprint</span>
+<span class="p">$</span> clawee doctor --fix          <span class="mut"># (or) mint / repair the identity key on its own</span>
 <span class="p">$</span> cat ~/.clawee/id_ed25519.pub  <span class="mut"># the public key to enroll</span></pre>
           </li>
           <li>
