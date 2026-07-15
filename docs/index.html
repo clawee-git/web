@@ -80,15 +80,7 @@
       <section id="install">
         <p class="section-h">Setup</p>
         <h2>Install</h2>
-        <p>Two components, each <strong>installed</strong> with a one-liner (fetched over TLS and signature-verified from <code>release.clawee.org</code>) and <strong>updated</strong> in place with its own <code>update</code>.</p>
-
-        <p class="grp">Client — your laptop / workstation</p>
-        <div class="cmd" style="margin-bottom:10px; max-width:660px">
-          <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
-          <button class="copy" data-copy="curl -fsSL https://release.clawee.org/clawee/install.sh | sh">copy</button>
-        </div>
-        <pre><span class="p">$</span> clawee update            <span class="mut"># update in place; skips if current</span>
-<span class="p">$</span> clawee update --force    <span class="mut"># reinstall the latest regardless</span></pre>
+        <p>Two components, each <strong>installed</strong> with a one-liner (fetched over TLS and signature-verified from <code>release.clawee.org</code>) and <strong>updated</strong> in place with its own <code>update</code>. On a fresh setup, install the <strong>daemon</strong> on each box that hosts sessions first, then the <strong>client</strong> on the machines you drive them from.</p>
 
         <p class="grp">Daemon — boxes that host sessions</p>
         <div class="cmd" style="margin-bottom:10px; max-width:660px">
@@ -97,6 +89,14 @@
         </div>
         <pre><span class="p">$</span> claweed update           <span class="mut"># update in place; skips if current</span>
 <span class="p">$</span> claweed update --force   <span class="mut"># reinstall the latest regardless</span></pre>
+
+        <p class="grp">Client — your laptop / workstation</p>
+        <div class="cmd" style="margin-bottom:10px; max-width:660px">
+          <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
+          <button class="copy" data-copy="curl -fsSL https://release.clawee.org/clawee/install.sh | sh">copy</button>
+        </div>
+        <pre><span class="p">$</span> clawee update            <span class="mut"># update in place; skips if current</span>
+<span class="p">$</span> clawee update --force    <span class="mut"># reinstall the latest regardless</span></pre>
       </section>
 
       <!-- PAIRING -->
@@ -119,8 +119,9 @@
           </li>
           <li>
             <span class="st">Get your device key</span>
-            <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. Create it and read the public half:</p>
-            <pre><span class="p">$</span> clawee status                <span class="mut"># generates the key; shows the chain + fingerprint</span>
+            <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. <code>clawee status</code> guarantees the key exists and prints its fingerprint — or mint it on its own with <code>clawee doctor --fix</code>. Then read the public half:</p>
+            <pre><span class="p">$</span> clawee status                <span class="mut"># brings up the chain; mints the key + shows its fingerprint</span>
+<span class="p">$</span> clawee doctor --fix          <span class="mut"># (or) mint / repair the identity key on its own</span>
 <span class="p">$</span> cat ~/.clawee/id_ed25519.pub  <span class="mut"># the public key to enroll</span></pre>
           </li>
           <li>
