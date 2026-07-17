@@ -179,7 +179,7 @@
           <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
           <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve [--label &lt;x&gt;] &lt;fp&gt;</code> / <code>revoke &lt;fp&gt;</code>).</span></div>
           <div class="row"><code>relays &lt;list|probe|priority|skip|use&gt;</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens an interactive picker.</span></div>
-          <div class="row"><code>gw [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relay drill-down); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>.</span></div>
+          <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relay drill-down); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>. Alias: <code>gw</code>.</span></div>
           <div class="row"><code>doctor [--fix] [--yes]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can (<code>--yes</code> skips consent prompts).</span></div>
           <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
           <div class="row"><code>lock-passphrase</code><span class="d">Set the idle-lock passphrase in the local config.</span></div>
@@ -199,12 +199,16 @@
         </p>
         <div class="cmds">
           <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
-          <div class="row"><code>clawee gw</code><span class="d">Open the interactive gateway <b>chooser</b> (piped: list local sessions grouped by gateway, with live/dead state).</span></div>
-          <div class="row"><code>clawee gw use &lt;fp|name&gt;</code><span class="d">Switch to that gateway and attach.</span></div>
-          <div class="row"><code>clawee gw list</code><span class="d">List all paired gateways with session counts.</span></div>
-          <div class="row"><code>clawee gw name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
-          <div class="row"><code>clawee gw user &lt;fp|name&gt; &lt;user&gt;</code><span class="d">Set the per-gateway OS user (<code>-</code> clears the override).</span></div>
+          <div class="row"><code>clawee gateway</code><span class="d">Open the interactive gateway <b>chooser</b> (piped: list local sessions grouped by gateway, with live/dead state).</span></div>
+          <div class="row"><code>clawee gateway use &lt;fp|name&gt;</code><span class="d">Switch to that gateway and attach.</span></div>
+          <div class="row"><code>clawee gateway list</code><span class="d">List all paired gateways with session counts.</span></div>
+          <div class="row"><code>clawee gateway name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
+          <div class="row"><code>clawee gateway user &lt;fp|name&gt; &lt;user&gt;</code><span class="d">Set the per-gateway OS user (<code>-</code> clears the override).</span></div>
         </div>
+        <p style="margin-top:16px">
+          <code>gw</code> is a short alias for <code>gateway</code> — <code>clawee gw list</code> and
+          <code>clawee gateway list</code> are the same command.
+        </p>
         <p style="margin-top:16px">
           With a single gateway, none of this shows — <code>clawee</code> goes straight to the picker.
           With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
