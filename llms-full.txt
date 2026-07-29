@@ -263,4 +263,4 @@ Both components self-update in place from the signed release channel:
 
 ---
 
-Docs synced 2026-07-29 against clawee v0.1.101 · claweed v0.1.41.
+Docs synced 2026-07-29 against clawee v0.1.102 · claweed v0.1.42.

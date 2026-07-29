@@ -76,6 +76,19 @@
   "syncs": [
     {
       "date": "2026-07-29",
+      "scope": "stamp only — no page content changed",
+      "released": {
+        "clawee": "v0.1.102",
+        "claweed": "v0.1.42"
+      },
+      "repos": {
+        "clawee-git/cli": "04e3b4c",
+        "clawee-git/daemon": "c5ad76d"
+      },
+      "notes": "Both components were re-cut to ship installer fixes, so the stamp had to move — but NOTHING on the page changed, and the review that justifies saying so is recorded here. cli is the SAME commit as the previous entry (04e3b4c): clawee v0.1.102's binary is byte-identical to v0.1.101 and only the inner installer inside the zip differs. The daemon delta d186508..c5ad76d touches install/install.sh.in and install_test.sh only — the installer's own output, which this site does not document (it documents the install one-liner, not what the installer prints). Version-parse fixes: release 8611a21 (clawee installer) + daemon #75 (claweed installer, both callers)."
+    },
+    {
+      "date": "2026-07-29",
       "scope": "release catch-up: stamp refresh + doctor version reporting",
       "released": {
         "clawee": "v0.1.101",
