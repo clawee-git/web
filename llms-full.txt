@@ -100,7 +100,7 @@ Every `clawee <command>` verb:
 - `devices <list|approve|revoke>` — enroll and manage device keys (`approve [--label <x>] <fp>` / `revoke <fp>`).
 - `relays [list|probe|priority|skip|use|auto|gateway]` — rank relays (LAN-first); bare `relays` opens the interactive list (see Relays).
 - `gateway [use|list|name|user …]` — switch gateways (interactive; `l` = relays, `d` = devices); `use <fp|name>`; `list`; `name`/`user <fp|name> <val>`. Alias: `gw`.
-- `doctor [--fix] [--yes]` — diagnose the local setup; `--fix` repairs what it can (`--yes` skips consent prompts).
+- `doctor [--fix] [--yes]` — diagnose the local setup; `--fix` repairs what it can (`--yes` skips consent prompts). Always reports the clawee + claweed versions, including when the chain is down — quote that block in a bug report.
 - `update [--dry] [--force]` — self-update from release.clawee.org (shows the gap; skips if current).
 - `lock-passphrase` — set the lock passphrase in the local config. Once set it also **gates startup** — opening a session asks for it first (the maintenance commands stay reachable). Ten free tries, then every further attempt waits 5 minutes.
 - `version` — print the clawee version (also `--version`).
@@ -256,10 +256,11 @@ Both components self-update in place from the signed release channel:
 
 ## Troubleshooting
 
-- `clawee doctor [--fix] [--yes]` diagnoses the local setup and repairs what it can.
+- `clawee doctor [--fix] [--yes]` diagnoses the local setup and repairs what it can, and always prints the clawee + claweed versions — even when nothing connects.
+- `claweed doctor` (on the session host) reports the installed daemon version alongside the version actually running; if they differ, restart the service.
 - `clawee status` probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.
 - Docs: https://clawee.org/docs · Transport (pairing, gateways, relays): https://burrowee.com
 
 ---
 
-Docs synced 2026-07-29 against clawee v0.1.99 · claweed v0.1.39.
+Docs synced 2026-07-29 against clawee v0.1.101 · claweed v0.1.41.

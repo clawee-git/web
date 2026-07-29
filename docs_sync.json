@@ -76,6 +76,19 @@
   "syncs": [
     {
       "date": "2026-07-29",
+      "scope": "release catch-up: stamp refresh + doctor version reporting",
+      "released": {
+        "clawee": "v0.1.101",
+        "claweed": "v0.1.41"
+      },
+      "repos": {
+        "clawee-git/cli": "04e3b4c",
+        "clawee-git/daemon": "d186508"
+      },
+      "notes": "clawee v0.1.101 + claweed v0.1.41 shipped, which CLOSES the divergence the previous entry recorded: the relay list's 'G' removal is now in released binaries, so the page describing q/Esc → chooser is true of what users run. Also documents what those releases added — `clawee doctor` now reports versions on every run including a dead chain (it used to print them only on the success path), and `claweed doctor` gained an installed-vs-running version row. Footer stamp moved v0.1.99/v0.1.39 → v0.1.101/v0.1.41 in both docs/index.html and llms-full.txt. A separate entry rather than an edit of the one below: that entry is an accurate record of what was verified at the time, divergence included."
+    },
+    {
+      "date": "2026-07-29",
       "scope": "full alternate-view sweep: every picker/chooser/list/lock/pager view, its keys and description; DOCS-SYNC markers added in cli",
       "released": {
         "clawee": "v0.1.99",
