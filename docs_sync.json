@@ -1,0 +1,29 @@
+{
+  "_comment": "Docs-sync marker for clawee.org. Each entry records the commit the site's docs were verified against, so the next sync reviews `git log <sha>..origin/main` per repo instead of re-auditing everything. Never edit a past entry — append a new one.",
+  "syncs": [
+    {
+      "date": "2026-07-29",
+      "scope": "gateway + relay surface, picker keys, in-picker device pairing",
+      "released": {
+        "clawee": "v0.1.99",
+        "claweed": "v0.1.39"
+      },
+      "repos": {
+        "clawee-git/cli": "1276dcd",
+        "clawee-git/daemon": "2a7cb15"
+      },
+      "notes": "Synced against the RELEASED surface, not cli main. cli 3835270 (#159 connection events) and 1780887 (#160 closed-session replay contract) were on main but unreleased at sync time and carry no doc-visible surface. daemon commits after 2a7cb15 (conn_log/audit) are internal."
+    },
+    {
+      "date": "2026-07-17",
+      "scope": "canonical `gateway` verb (gw = alias)",
+      "released": {
+        "clawee": "v0.1.92"
+      },
+      "repos": {
+        "clawee-git/cli": "d253337"
+      },
+      "notes": "Reconstructed from web commit 413e5b9. docs/index.html only — llms-full.txt was missed and still carried `gw` as canonical until the 2026-07-29 sync."
+    }
+  ]
+}

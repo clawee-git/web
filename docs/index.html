@@ -47,7 +47,8 @@
         <li><a href="#attach">Attaching</a></li>
         <li><a href="#commands">Commands</a></li>
         <li><a href="#gateways">Gateways</a></li>
-        <li><a href="#keys">In-session keys</a></li>
+        <li><a href="#relays">Relays</a></li>
+        <li><a href="#keys">Picker &amp; session keys</a></li>
         <li><a href="#composer">Composer editing</a></li>
         <li><a href="#slash">Slash commands</a></li>
       </ul>
@@ -141,14 +142,47 @@
           </li>
         </ol>
         <div class="callout">
-          <strong>Additional devices — approve remotely (optional).</strong> Once one device is
-          enrolled you don't need host access for the next one: the new device <em>knocks</em> (it
-          connects, gets refused as <strong>pending approval</strong>), then you approve it from the
-          already-enrolled device — <code>clawee status</code> prints the exact line to run.
-          <pre style="margin:10px 0 0"><span class="p">$</span> clawee devices                <span class="mut"># enrolled keys + pending knocks</span>
+          <strong>Additional devices — pair from the picker.</strong> Once one device is enrolled you
+          don't need host access for the next one. On the new device just run <code>clawee</code>: an
+          untrusted key can't open a session, so the picker opens as a <strong>pairing form</strong>
+          instead — a header naming the gateway, the status, and the device key fingerprint, with one
+          action on the top row.
+          <pre style="margin:10px 0 0">gateway   workshop (SHA256:a1b2c3d4)
+status    not paired
+key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<span class="mut">⏎ pair · r re-check · l relays · q quit</span></pre>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="st">Send the request</span>
+            <p>Press <kbd>Enter</kbd> on the <code>pair</code> row. That queues a <em>knock</em> on the
+              host and the status becomes <code>waiting for approval</code> with a running clock. If
+              your ssh-agent holds several keys clawee asks which one to enrol first — pairing enrols
+              exactly <strong>one</strong> key.</p>
+          </li>
+          <li>
+            <span class="st">Approve it from an enrolled device</span>
+            <p>On a device that's already paired, approve the pending fingerprint — from the CLI, or in
+              the picker's devices view (<kbd>d</kbd> on the Local tab: <kbd>Enter</kbd> approves the
+              selected pending key, <kbd>x</kbd> revokes):</p>
+            <pre><span class="p">$</span> clawee devices                <span class="mut"># enrolled keys + pending knocks</span>
 <span class="p">$</span> clawee devices approve [--label &lt;x&gt;] &lt;fp&gt;  <span class="mut"># enroll a pending device key</span>
 <span class="p">$</span> clawee devices revoke &lt;fp&gt;     <span class="mut"># remove a key or drop a knock</span></pre>
-        </div>
+          </li>
+          <li>
+            <span class="st">Back on the new device</span>
+            <p>The form re-checks itself every 10 seconds and drops into the ordinary picker once the
+              key is trusted. Automatic polling stops after 10 minutes — <kbd>Enter</kbd> on the
+              <code>re-check</code> row asks again at any time.</p>
+          </li>
+        </ol>
+        <p style="margin-top:16px">
+          If the gateway itself can't be reached the form says <code>unreachable</code> and offers
+          <code>continue</code> rather than pairing (a knock can't be queued through a gateway that
+          never answers). <kbd>l</kbd> opens the relay list from any pairing state — relay choice needs
+          no gateway trust, and a bad relay is the usual reason a gateway looks unreachable.
+        </p>
       </section>
 
       <!-- ATTACHING -->
@@ -178,11 +212,11 @@
           <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.</span></div>
           <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
           <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve [--label &lt;x&gt;] &lt;fp&gt;</code> / <code>revoke &lt;fp&gt;</code>).</span></div>
-          <div class="row"><code>relays &lt;list|probe|priority|skip|use&gt;</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens an interactive picker.</span></div>
-          <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relay drill-down); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>. Alias: <code>gw</code>.</span></div>
+          <div class="row"><code>relays [list|probe|priority|skip|use|auto|gateway]</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens the interactive list (see <a href="#relays">relays</a>).</span></div>
+          <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relays, <kbd>d</kbd> = devices); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>. Alias: <code>gw</code>.</span></div>
           <div class="row"><code>doctor [--fix] [--yes]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can (<code>--yes</code> skips consent prompts).</span></div>
           <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
-          <div class="row"><code>lock-passphrase</code><span class="d">Set the idle-lock passphrase in the local config.</span></div>
+          <div class="row"><code>lock-passphrase</code><span class="d">Set the lock passphrase in the local config. Once set it also <b>gates startup</b> — opening a session asks for it first (the maintenance commands above stay reachable). Ten free tries, then every further attempt waits 5 minutes.</span></div>
           <div class="row"><code>version</code><span class="d">Print the clawee version (also <code>--version</code>).</span></div>
           <div class="row"><code>help</code><span class="d">Print the full help (also <code>--help</code>, <code>-h</code>).</span></div>
         </div>
@@ -201,7 +235,7 @@
           <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
           <div class="row"><code>clawee gateway</code><span class="d">Open the interactive gateway <b>chooser</b> (piped: list local sessions grouped by gateway, with live/dead state).</span></div>
           <div class="row"><code>clawee gateway use &lt;fp|name&gt;</code><span class="d">Switch to that gateway and attach.</span></div>
-          <div class="row"><code>clawee gateway list</code><span class="d">List all paired gateways with session counts.</span></div>
+          <div class="row"><code>clawee gateway list</code><span class="d">Table of every paired gateway — <code>GATEWAY · FP · RELAYS · SESSIONS · DEFAULT</code>.</span></div>
           <div class="row"><code>clawee gateway name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
           <div class="row"><code>clawee gateway user &lt;fp|name&gt; &lt;user&gt;</code><span class="d">Set the per-gateway OS user (<code>-</code> clears the override).</span></div>
         </div>
@@ -212,21 +246,75 @@
         <p style="margin-top:16px">
           With a single gateway, none of this shows — <code>clawee</code> goes straight to the picker.
           With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
-          <kbd>g</kbd> in the picker to switch. In the chooser, <kbd>l</kbd> drills down into the selected
-          gateway's relays and can pin one.
+          <kbd>g</kbd> in the picker to switch.
+        </p>
+        <p style="margin-top:16px">Keys in the chooser:</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Enter</kbd></code><span class="d">Move · pick that gateway and attach.</span></div>
+          <div class="row"><code><kbd>l</kbd></code><span class="d">Drill into the selected gateway's <b>relays</b> and pin one (<kbd>Enter</kbd> picks, <kbd>q</kbd> goes back).</span></div>
+          <div class="row"><code><kbd>d</kbd></code><span class="d">Open the <b>devices</b> view for that gateway — <kbd>Enter</kbd> approves a pending key, <kbd>x</kbd> revokes.</span></div>
+          <div class="row"><code><kbd>r</kbd> · <kbd>u</kbd></code><span class="d">Set the gateway's short <b>name</b> · set its OS <b>user</b>.</span></div>
+          <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Back, without switching.</span></div>
+        </div>
+      </section>
+
+      <!-- RELAYS -->
+      <section id="relays">
+        <p class="section-h">Reference</p>
+        <h2>Relays</h2>
+        <p>
+          A relay is the hop your session actually travels through. clawee keeps its own preference
+          order per gateway — LAN relays first, then your manual order — and dials the top row. It never
+          switches on its own: when the chosen relay stays unreachable, clawee tells you and opens the
+          list so <em>you</em> pick.
+        </p>
+        <div class="cmds">
+          <div class="row"><code>clawee relays</code><span class="d">Open the interactive list (piped: prints the table instead).</span></div>
+          <div class="row"><code>clawee relays list</code><span class="d">Print the table in effective dial order — <code># · RELAY · URL · WHERE · OBSERVED · STATUS</code>.</span></div>
+          <div class="row"><code>clawee relays probe</code><span class="d"><b>Probe every relay</b>, then print the table with what came back.</span></div>
+          <div class="row"><code>clawee relays priority &lt;id…&gt;</code><span class="d">Move the listed relays to the front of the manual order.</span></div>
+          <div class="row"><code>clawee relays skip &lt;id&gt;</code><span class="d">Never auto-dial that relay (at least one must stay enabled).</span></div>
+          <div class="row"><code>clawee relays use &lt;id&gt;</code><span class="d">Pin a relay to the front, ahead of the LAN-first order.</span></div>
+          <div class="row"><code>clawee relays auto</code><span class="d">Clear the pin — back to the automatic order, and re-probe.</span></div>
+          <div class="row"><code>clawee relays gateway [&lt;id&gt;]</code><span class="d">Show the gateways, or switch which one these relays belong to.</span></div>
+        </div>
+        <p style="margin-top:16px">
+          Ids accept an unambiguous prefix of the relay's gateway fingerprint. In the interactive list
+          (also reachable as <code>/relays</code> while attached, and with <kbd>l</kbd> from the picker):
+        </p>
+        <pre><span class="mut">relays    ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose</span>
+
+<span class="mut">    #  URL                  STATUS       LAT    TTL             TYPE</span>
+<span class="p">▸</span>   1  relay.example:8448   reachable    28ms   4m12s           system   📌 pinned
+    2  10.0.0.4:8448 (lan)  reachable    2ms    9m58s           edge
+    3  relay-b.example:844  unreachable  —      cooldown 38m0s  system</pre>
+        <p>
+          <b>STATUS</b> is what the last probe saw, <b>LAT</b> its round-trip, <b>TTL</b> how long that
+          reading stays fresh (or the cooldown left on a failing relay), <b>TYPE</b> whether the relay is
+          system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe.
+          Choosing a relay while attached <b>switches the live session</b> onto it — clawee drops the
+          stream and re-dials through the new relay, rather than waiting for the next reconnect.
         </p>
       </section>
 
       <!-- KEYS -->
       <section id="keys">
         <p class="section-h">Reference</p>
-        <h2>In-session keys</h2>
+        <h2>Picker &amp; session keys</h2>
         <p>Once attached, keystrokes pass through to the remote shell except:</p>
         <div class="cmds">
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
-          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the idle-lock passphrase).</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the lock passphrase).</span></div>
           <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty).</span></div>
-          <div class="row"><code><kbd>g</kbd></code><span class="d">In the session picker (not while attached): open the gateway chooser.</span></div>
+        </div>
+        <p style="margin-top:18px">In the session picker (not while attached) — these never reach the remote shell:</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>←</kbd> <kbd>→</kbd> · <kbd>Enter</kbd></code><span class="d">Switch the Local / Remote tab · attach the selected session.</span></div>
+          <div class="row"><code><kbd>n</kbd> · <kbd>r</kbd> · <kbd>x</kbd> · <kbd>p</kbd></code><span class="d">New session · rename · close · purge.</span></div>
+          <div class="row"><code><kbd>l</kbd></code><span class="d">Switch the gateway's <b>relay</b> right there — a compact list, <kbd>Enter</kbd> switches, <kbd>q</kbd> backs out.</span></div>
+          <div class="row"><code><kbd>d</kbd></code><span class="d">Local tab: open the <b>devices</b> view (approve / revoke device keys). On the Remote tab <kbd>d</kbd> is detach.</span></div>
+          <div class="row"><code><kbd>g</kbd></code><span class="d">Open the gateway chooser (only with more than one gateway).</span></div>
+          <div class="row"><code><kbd>q</kbd></code><span class="d">Quit clawee.</span></div>
         </div>
       </section>
 
@@ -261,7 +349,7 @@
           <div class="row"><code>/upload</code><span class="d">Send a file or directory — <code>/upload &lt;path&gt;</code> (also: paste a path or drop a file). Directories go as tar.gz; uploads land in a dated <code>uploads/&lt;date&gt;/…</code> dir on claweed ≥ v0.1.30.</span></div>
           <div class="row"><code>/download</code><span class="d">Fetch a remote file or dir to your machine — <code>/download &lt;path&gt;</code>.</span></div>
           <div class="row"><code>/name</code><span class="d">Set the session's display name — renames the <b>remote</b> pty.</span></div>
-          <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ select · K/J reorder · s skip · u pin · a auto · p probe.</span></div>
+          <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see <a href="#relays">relays</a>).</span></div>
           <div class="row"><code>/settings</code><span class="d">Show or set client upload limits — <code>/settings [max-upload|async-upload &lt;size&gt;]</code>.</span></div>
           <div class="row"><code>/history</code><span class="d">Page the remote session's command history (q to quit).</span></div>
           <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions.</span></div>
@@ -276,6 +364,11 @@
         <p style="margin-top:18px; color:var(--dim)">
           Stuck? <code>clawee doctor</code> diagnoses the chain, and <code>clawee status</code> shows
           exactly where a connection stops.
+        </p>
+        <p style="margin-top:26px; color:var(--dim); font-size:13px">
+          <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+               channel version, which would make this stamp claim a sync it never had. -->
+          Docs synced <b>2026-07-29</b> against clawee v0.1.99 · claweed v0.1.39.
         </p>
       </section>
     </div>

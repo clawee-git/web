@@ -15,9 +15,21 @@
   don't introduce sans/serif or external assets.
 - **Content sources (keep in sync):** the command/flag/key/slash reference on
   `docs/index.html` mirrors `clawee-git/cli` `cmd/clawee/usage.go` — update it when the
-  CLI surface changes. Install one-liners point at `release.clawee.org`
+  CLI surface changes. Note `usage.go` is the TOP-LEVEL map only; per-command verbs
+  (e.g. `relays auto` / `relays gateway`) live in each command's own usage const, so
+  check both. `llms-full.txt` is a full mirror of `docs/index.html` — **every docs edit
+  lands in both** (the 2026-07-17 pass updated only the HTML and left `llms-full.txt`
+  stale for two weeks). Install one-liners point at `release.clawee.org`
   (`clawee` client + `claweed` daemon). All burrowee references link to
   https://burrowee.com.
+- **Docs-sync marker:** `docs_sync.json` records, per sync, the cli/daemon commits the
+  docs were verified against + the released versions. Next sync = read the newest entry,
+  review `git log <sha>..origin/main` in each repo, update the pages, then PREPEND a new
+  entry (never edit a past one) and bump the "Docs synced …" stamp at the foot of
+  `docs/index.html` + `llms-full.txt`. Sync against the RELEASED surface, not cli `main`
+  — the site describes what users can actually run. That stamp is deliberately plain
+  text, NOT `class="ver"`: `script.js` rewrites `.ver` spans to the live channel version,
+  which would make the stamp claim a sync that never happened.
 - **LIVE at https://clawee.org** — served static from nsm (Cloudflare Full-strict).
   Re-deploy content any time with `deploy/deploy.sh` (rsync → nsm). The one-time
   host activation (cert via snap certbot `--dns-cloudflare`, vhost in
