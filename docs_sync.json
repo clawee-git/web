@@ -1,6 +1,92 @@
 {
-  "_comment": "Docs-sync marker for clawee.org. Each entry records the commit the site's docs were verified against, so the next sync reviews `git log <sha>..origin/main` per repo instead of re-auditing everything. Never edit a past entry — append a new one.",
+  "_comment": "Docs-sync marker for clawee.org. `surfaces` is the published UI/command surface: every place in the code whose text a user reads off this site. Each has a matching `DOCS-SYNC <anchor>` comment at that spot in the source — `grep -rn 'DOCS-SYNC' <repo>` is the authoritative list, and it should agree with this one. `syncs` records what each pass was verified against, so the next pass reviews `git log <sha>..origin/main` per repo instead of re-auditing. Never edit a past sync entry — prepend a new one.",
+
+  "surfaces": [
+    {
+      "view": "top-level help",
+      "src": "cli:cmd/clawee/usage.go printUsage",
+      "anchor": "/docs#commands",
+      "note": "TOP-LEVEL map only — several verbs accept more than it lists. Never sync the Commands table from this file alone."
+    },
+    {
+      "view": "relays verbs",
+      "src": "cli:cmd/clawee/relays_cmd.go relaysUsage",
+      "anchor": "/docs#relays",
+      "note": "The full verb set. `auto` and `gateway` appear ONLY here, not in printUsage."
+    },
+    {
+      "view": "session picker",
+      "src": "cli:internal/picker/render.go tabBar",
+      "anchor": "/docs#keys",
+      "note": "Per-tab: the Local and Remote hints differ (d = devices vs detach)."
+    },
+    {
+      "view": "pairing form",
+      "src": "cli:internal/picker/pair_header.go pairFormHint",
+      "anchor": "/docs#pairing",
+      "note": "One bar per state: pair / re-check / continue."
+    },
+    {
+      "view": "gateway chooser",
+      "src": "cli:cmd/clawee/gateway_modal.go gwHint",
+      "anchor": "/docs#gateways"
+    },
+    {
+      "view": "relay list — bar, ⏎ verbs, columns",
+      "src": "cli:internal/relay_pref/list_render.go RenderList",
+      "anchor": "/docs#relays"
+    },
+    {
+      "view": "relay list — key handler",
+      "src": "cli:cmd/clawee/relays_ui.go handleKey",
+      "anchor": "/docs#relays",
+      "note": "Accepts MORE than the bar shows: +/- alias K/J, k/j alias arrows, q closes. The bar cannot grow (80-col budget), so the docs page is the only place these are published. 'G' (cycle gateway) was REMOVED here on 2026-07-29 — do not re-document it."
+    },
+    {
+      "view": "relay quick switch (picker `l`)",
+      "src": "cli:cmd/clawee/relay_quickswitch.go quickRelayLines",
+      "anchor": "/docs#relays"
+    },
+    {
+      "view": "devices view",
+      "src": "cli:cmd/clawee/devices_view.go devicesHint",
+      "anchor": "/docs#devices",
+      "note": "Acts on trust (approve/revoke a device key) — a silent drift here is worse than cosmetic."
+    },
+    {
+      "view": "lock screen",
+      "src": "cli:internal/lock_screen/render.go Render",
+      "anchor": "/docs#lock",
+      "note": "Advertises only 'type the passphrase + Enter'."
+    },
+    {
+      "view": "lock screen — editing keys",
+      "src": "cli:internal/lock_input/lock_input.go",
+      "anchor": "/docs#lock",
+      "note": "Ctrl+U reveal / Ctrl+Backspace clear appear NOWHERE on screen. Docs are their only home."
+    },
+    {
+      "view": "/history pager",
+      "src": "cli:cmd/clawee/history_pager_ui.go pageAltScreen",
+      "anchor": "/docs#slash",
+      "note": "No key bar is rendered at all — every key is invisible until pressed."
+    }
+  ],
+
   "syncs": [
+    {
+      "date": "2026-07-29",
+      "scope": "full alternate-view sweep: every picker/chooser/list/lock/pager view, its keys and description; DOCS-SYNC markers added in cli",
+      "released": {
+        "clawee": "v0.1.99",
+        "claweed": "v0.1.39"
+      },
+      "repos": {
+        "clawee-git/cli": "1276dcd",
+        "clawee-git/daemon": "2a7cb15"
+      },
+      "notes": "Second pass the same day, after the gateway/relay pass below. Added Views & keys index, Devices and Locking sections, the relay list's unadvertised keys (+/-, q/Esc), the Remote tab's differing row actions, and the /history pager keys. Every surface above now carries a DOCS-SYNC comment in cli (branch docs-sync-markers, off 1780887). Documenting the surface also RETIRED one key: the relay list's 'G' cycled gateway on a single unconfirmed keystroke — removed in the same branch (handler, hint, cycleGateway helper, tests), so the docs describe q/Esc → chooser instead. This sync therefore documents cli main + that branch, NOT released v0.1.99: until the branch ships, the released binary still answers G."
+    },
     {
       "date": "2026-07-29",
       "scope": "gateway + relay surface, picker keys, in-picker device pairing",

@@ -48,7 +48,9 @@
         <li><a href="#commands">Commands</a></li>
         <li><a href="#gateways">Gateways</a></li>
         <li><a href="#relays">Relays</a></li>
-        <li><a href="#keys">Picker &amp; session keys</a></li>
+        <li><a href="#keys">Views &amp; keys</a></li>
+        <li><a href="#devices">Devices</a></li>
+        <li><a href="#lock">Locking</a></li>
         <li><a href="#composer">Composer editing</a></li>
         <li><a href="#slash">Slash commands</a></li>
       </ul>
@@ -295,17 +297,48 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           Choosing a relay while attached <b>switches the live session</b> onto it — clawee drops the
           stream and re-dials through the new relay, rather than waiting for the next reconnect.
         </p>
+        <div class="cmds">
+          <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>k</kbd>/<kbd>j</kbd></code><span class="d">Move the selection.</span></div>
+          <div class="row"><code><kbd>K</kbd>/<kbd>J</kbd> · <kbd>+</kbd>/<kbd>-</kbd></code><span class="d">Raise / lower the selected relay's priority — the selection follows it.</span></div>
+          <div class="row"><code><kbd>s</kbd> · <kbd>u</kbd> · <kbd>a</kbd></code><span class="d">Skip · pin to the front · clear the pin and re-probe.</span></div>
+          <div class="row"><code><kbd>p</kbd></code><span class="d">Probe every relay now and repaint with the result.</span></div>
+          <div class="row"><code><kbd>Enter</kbd></code><span class="d">Pin the selected relay. In <code>/relays</code> and <code>clawee relays</code> that also switches the live session; in the gateway chooser's drill-down it pins and returns.</span></div>
+          <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Leave without pinning anything.</span></div>
+        </div>
+        <p style="margin-top:12px; color:var(--dim)">
+          The header bar has room for the common six — <kbd>+</kbd>/<kbd>-</kbd>, <kbd>q</kbd> and
+          <kbd>Esc</kbd> work but aren't printed there.
+        </p>
+        <p style="margin-top:12px">
+          This list edits relay order <em>within</em> one gateway; it doesn't switch between gateways.
+          To do that, leave with <kbd>q</kbd>/<kbd>Esc</kbd> and pick one in the
+          <a href="#gateways">gateway chooser</a>, or run <code>clawee relays gateway &lt;id&gt;</code>.
+        </p>
       </section>
 
       <!-- KEYS -->
       <section id="keys">
         <p class="section-h">Reference</p>
-        <h2>Picker &amp; session keys</h2>
+        <h2>Views &amp; keys</h2>
         <p>Once attached, keystrokes pass through to the remote shell except:</p>
         <div class="cmds">
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the lock passphrase).</span></div>
           <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty).</span></div>
+        </div>
+        <p style="margin-top:18px">
+          clawee has one more full-screen view behind most of these keys. Each takes over the terminal,
+          carries its key bar in the header, and leaves with <kbd>q</kbd>:
+        </p>
+        <div class="cmds">
+          <div class="row"><code>session picker</code><span class="d">Bare <code>clawee</code> — local + remote sessions. Keys below.</span></div>
+          <div class="row"><code>pairing form</code><span class="d">The picker on an unpaired device — see <a href="#pairing">pairing</a>.</span></div>
+          <div class="row"><code>gateway chooser</code><span class="d"><kbd>g</kbd>, or <code>clawee gateway</code> — see <a href="#gateways">gateways</a>.</span></div>
+          <div class="row"><code>relay list</code><span class="d"><code>/relays</code>, <code>clawee relays</code>, or <kbd>l</kbd> from the picker / chooser — see <a href="#relays">relays</a>.</span></div>
+          <div class="row"><code>devices view</code><span class="d"><kbd>d</kbd> on the picker's Local tab or in the chooser — see <a href="#devices">devices</a>.</span></div>
+          <div class="row"><code>lock screen</code><span class="d"><kbd>Ctrl</kbd>+<kbd>\</kbd>, an idle timeout, or clawee's startup — see <a href="#lock">locking</a>.</span></div>
+          <div class="row"><code>history pager</code><span class="d"><code>/history</code> — see <a href="#slash">slash commands</a>.</span></div>
+          <div class="row"><code>version panel</code><span class="d"><code>/version</code> — clawee + claweed builds; <kbd>Esc</kbd> goes back.</span></div>
         </div>
         <p style="margin-top:18px">In the session picker (not while attached) — these never reach the remote shell:</p>
         <div class="cmds">
@@ -314,7 +347,78 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           <div class="row"><code><kbd>l</kbd></code><span class="d">Switch the gateway's <b>relay</b> right there — a compact list, <kbd>Enter</kbd> switches, <kbd>q</kbd> backs out.</span></div>
           <div class="row"><code><kbd>d</kbd></code><span class="d">Local tab: open the <b>devices</b> view (approve / revoke device keys). On the Remote tab <kbd>d</kbd> is detach.</span></div>
           <div class="row"><code><kbd>g</kbd></code><span class="d">Open the gateway chooser (only with more than one gateway).</span></div>
-          <div class="row"><code><kbd>q</kbd></code><span class="d">Quit clawee.</span></div>
+          <div class="row"><code><kbd>q</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Quit clawee.</span></div>
+        </div>
+        <p style="margin-top:18px">On the <b>Remote</b> tab the row actions differ — they act on the remote pty, not your local session:</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>t</kbd> · <kbd>x</kbd></code><span class="d">Restart the session · stop it.</span></div>
+          <div class="row"><code><kbd>d</kbd></code><span class="d">Detach whoever is attached (here <kbd>d</kbd> is <em>not</em> the devices view).</span></div>
+          <div class="row"><code><kbd>r</kbd> · <kbd>p</kbd> · <kbd>l</kbd></code><span class="d">Rename · purge · relays, same as the Local tab.</span></div>
+        </div>
+      </section>
+
+      <!-- DEVICES -->
+      <section id="devices">
+        <p class="section-h">Reference</p>
+        <h2>Devices</h2>
+        <p>
+          Every device that opens a session is a <strong>key</strong> enrolled on the box running
+          <code>claweed</code>. The devices view lists them — enrolled keys and pending knocks from
+          devices waiting to be let in. Open it with <kbd>d</kbd> on the picker's Local tab, or on a
+          selected gateway in the chooser. It needs a paired device: an untrusted key can't read the
+          list.
+        </p>
+        <div class="cmds">
+          <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>k</kbd>/<kbd>j</kbd></code><span class="d">Move between keys.</span></div>
+          <div class="row"><code><kbd>Enter</kbd></code><span class="d"><b>Approve</b> the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.</span></div>
+          <div class="row"><code><kbd>x</kbd></code><span class="d"><b>Revoke</b> an enrolled key, or drop a pending knock. Also confirms — and warns separately if the key is <em>this</em> device's, which would lock you out.</span></div>
+          <div class="row"><code><kbd>q</kbd></code><span class="d">Back.</span></div>
+        </div>
+        <p style="margin-top:16px">
+          The same three actions exist as commands, over the same list — use whichever fits:
+        </p>
+        <pre><span class="p">$</span> clawee devices                              <span class="mut"># enrolled keys + pending knocks</span>
+<span class="p">$</span> clawee devices approve [--label &lt;x&gt;] &lt;fp&gt;   <span class="mut"># enroll a pending device key</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;                   <span class="mut"># remove a key or drop a knock</span></pre>
+        <p style="margin-top:16px; color:var(--dim)">
+          Revoking a device stops it opening <em>new</em> sessions immediately. A session it already has
+          attached keeps running until it next reconnects.
+        </p>
+      </section>
+
+      <!-- LOCK -->
+      <section id="lock">
+        <p class="section-h">Reference</p>
+        <h2>Locking</h2>
+        <p>
+          Set a passphrase and clawee can cover the screen — on demand, after an idle period, or before
+          it will open a session at all. The lock screen shows the session, gateway, relay and versions,
+          but no terminal content.
+        </p>
+        <div class="cmds">
+          <div class="row"><code>clawee lock-passphrase</code><span class="d">Set the passphrase (masked entry). This is what turns the startup gate on.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd> · <code>/lock</code></code><span class="d">Lock now — from the session, or from the composer.</span></div>
+          <div class="row"><code>/passphrase</code><span class="d">Set or clear the passphrase from inside a session.</span></div>
+        </div>
+        <p style="margin-top:16px">The lock screen tells you to type the passphrase and press <kbd>Enter</kbd>. It accepts a little more than that:</p>
+        <div class="cmds">
+          <div class="row"><code><kbd>Enter</kbd></code><span class="d">Try the passphrase.</span></div>
+          <div class="row"><code><kbd>Backspace</kbd></code><span class="d">Delete one character.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>U</kbd></code><span class="d"><b>Reveal</b> — toggle masking, to check what you typed.</span></div>
+          <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Backspace</kbd></code><span class="d">Clear the whole entry.</span></div>
+        </div>
+        <p style="margin-top:16px">
+          Arrows, function keys and stray mouse clicks are swallowed rather than typed into the
+          passphrase.
+        </p>
+        <div class="callout">
+          <strong>Startup gate.</strong> With a passphrase set, <code>clawee</code> asks for it before
+          opening a session — the same screen, before any network. Ten tries are free; from the tenth,
+          each further attempt waits 5 minutes, counted down on screen and remembered across restarts.
+          <kbd>Ctrl</kbd>+<kbd>C</kbd> gives up (the in-session lock can't be dismissed that way — it's
+          guarding a live session). The maintenance commands — <code>status</code>, <code>doctor</code>,
+          <code>relays</code>, <code>devices</code>, <code>update</code> — stay reachable without the
+          passphrase, so a forgotten one never leaves you unable to see why something's broken.
         </div>
       </section>
 
@@ -351,8 +455,8 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           <div class="row"><code>/name</code><span class="d">Set the session's display name — renames the <b>remote</b> pty.</span></div>
           <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see <a href="#relays">relays</a>).</span></div>
           <div class="row"><code>/settings</code><span class="d">Show or set client upload limits — <code>/settings [max-upload|async-upload &lt;size&gt;]</code>.</span></div>
-          <div class="row"><code>/history</code><span class="d">Page the remote session's command history (q to quit).</span></div>
-          <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions.</span></div>
+          <div class="row"><code>/history</code><span class="d">Page the remote session's command history — <kbd>↑</kbd><kbd>↓</kbd> or <kbd>j</kbd>/<kbd>k</kbd> a line, <kbd>Space</kbd>/<kbd>f</kbd> and <kbd>b</kbd> a page, <kbd>g</kbd>/<kbd>G</kbd> top / bottom, <kbd>q</kbd> quits. The pager prints no key bar.</span></div>
+          <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions (<kbd>Esc</kbd> goes back).</span></div>
           <div class="row"><code>/restart</code><span class="d">Restart the attached session in place.</span></div>
           <div class="row"><code>/reconnect</code><span class="d">Force a reconnect now.</span></div>
           <div class="row"><code>/refresh</code><span class="d">Repaint the remote screen now (alias <code>/redraw</code>).</span></div>

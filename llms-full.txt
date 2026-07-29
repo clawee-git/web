@@ -136,15 +136,37 @@ A relay is the hop your session actually travels through. clawee keeps its own p
 - `clawee relays auto` — clear the pin — back to the automatic order, and re-probe.
 - `clawee relays gateway [<id>]` — show the gateways, or switch which one these relays belong to.
 
-Ids accept an unambiguous prefix of the relay's gateway fingerprint. The interactive list (also `/relays` while attached, and `l` from the picker) keys: `↑↓` move · `K/J` prio · `s` skip · `u` pin · `a` auto · `p` probe · `⏎` choose. Its columns are `# · URL · STATUS · LAT · TTL · TYPE` — STATUS is what the last probe saw, LAT its round-trip, TTL how long that reading stays fresh (or the cooldown left on a failing relay), TYPE whether the relay is system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe. Choosing a relay while attached switches the live session onto it — clawee drops the stream and re-dials through the new relay.
+Ids accept an unambiguous prefix of the relay's gateway fingerprint. The interactive list (also `/relays` while attached, and `l` from the picker) keys — the header bar prints the common six, the rest work but are not shown:
 
-## Picker & session keys
+- `↑↓` or `k`/`j` — move the selection.
+- `K`/`J`, also `+`/`-` — raise / lower the selected relay's priority; the selection follows it.
+- `s` · `u` · `a` — skip · pin to the front · clear the pin and re-probe.
+- `p` — probe every relay now and repaint with the result.
+- `⏎` — pin the selected relay. In `/relays` and `clawee relays` that also switches the live session; in the gateway chooser's drill-down it pins and returns.
+- `q` / `Esc` — leave without pinning anything.
+
+This list edits relay order *within* one gateway; it does not switch between gateways. To do that, leave with `q`/`Esc` and pick one in the gateway chooser, or run `clawee relays gateway <id>`.
+
+Its columns are `# · URL · STATUS · LAT · TTL · TYPE` — STATUS is what the last probe saw, LAT its round-trip, TTL how long that reading stays fresh (or the cooldown left on a failing relay), TYPE whether the relay is system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe. Choosing a relay while attached switches the live session onto it — clawee drops the stream and re-dials through the new relay.
+
+## Views & keys
 
 Once attached, keystrokes pass through to the remote shell except:
 
 - `Ctrl+]` — open the command composer (type a `/command` or text; Enter sends).
 - `Ctrl+\` — lock the screen (unlock with the lock passphrase).
 - `F5` · `Ctrl+[` — redraw the remote screen (`Ctrl+[` needs the kitty keyboard protocol, e.g. Ghostty).
+
+clawee has one full-screen view behind most of its other keys. Each takes over the terminal, carries its key bar in the header, and leaves with `q`:
+
+- **session picker** — bare `clawee`; local + remote sessions. Keys below.
+- **pairing form** — the picker on an unpaired device (see Pairing).
+- **gateway chooser** — `g`, or `clawee gateway` (see Gateways).
+- **relay list** — `/relays`, `clawee relays`, or `l` from the picker / chooser (see Relays).
+- **devices view** — `d` on the picker's Local tab or in the chooser (see Devices).
+- **lock screen** — `Ctrl+\`, an idle timeout, or clawee's startup (see Locking).
+- **history pager** — `/history`.
+- **version panel** — `/version`; `Esc` goes back.
 
 In the session picker (not while attached) — these never reach the remote shell:
 
@@ -153,7 +175,38 @@ In the session picker (not while attached) — these never reach the remote shel
 - `l` — switch the gateway's relay right there (⏎ switches, `q` backs out).
 - `d` — Local tab: open the devices view (approve / revoke device keys). On the Remote tab `d` is detach.
 - `g` — open the gateway chooser (only with more than one gateway).
-- `q` — quit clawee.
+- `q` / `Ctrl+C` — quit clawee.
+
+On the Remote tab the row actions differ — they act on the remote pty, not your local session: `t` restart · `x` stop · `d` detach · `r` rename · `p` purge · `l` relays.
+
+## Devices
+
+Every device that opens a session is a key enrolled on the box running `claweed`. The devices view lists them — enrolled keys and pending knocks from devices waiting to be let in. Open it with `d` on the picker's Local tab, or on a selected gateway in the chooser. It needs a paired device: an untrusted key cannot read the list.
+
+- `↑↓` or `k`/`j` — move between keys.
+- `⏎` — approve the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.
+- `x` — revoke an enrolled key, or drop a pending knock. Also confirms, and warns separately if the key is *this* device's, which would lock you out.
+- `q` — back.
+
+The same three actions exist as commands, over the same list:
+
+    clawee devices                              # enrolled keys + pending knocks
+    clawee devices approve [--label <x>] <fp>   # enroll a pending device key
+    clawee devices revoke <fp>                  # remove a key or drop a knock
+
+Revoking a device stops it opening *new* sessions immediately. A session it already has attached keeps running until it next reconnects.
+
+## Locking
+
+Set a passphrase and clawee can cover the screen — on demand, after an idle period, or before it will open a session at all. The lock screen shows the session, gateway, relay and versions, but no terminal content.
+
+- `clawee lock-passphrase` — set the passphrase (masked entry). This is what turns the startup gate on.
+- `Ctrl+\` · `/lock` — lock now, from the session or the composer.
+- `/passphrase` — set or clear the passphrase from inside a session.
+
+The lock screen tells you to type the passphrase and press Enter. It accepts a little more than that: `Enter` tries it, `Backspace` deletes one character, **`Ctrl+U` reveals** (toggles masking, to check what you typed), and **`Ctrl+Backspace` clears** the whole entry. Arrows, function keys and stray mouse clicks are swallowed rather than typed into the passphrase.
+
+**Startup gate.** With a passphrase set, `clawee` asks for it before opening a session — the same screen, before any network. Ten tries are free; from the tenth, each further attempt waits 5 minutes, counted down on screen and remembered across restarts. `Ctrl+C` gives up (the in-session lock cannot be dismissed that way — it is guarding a live session). The maintenance commands — `status`, `doctor`, `relays`, `devices`, `update` — stay reachable without the passphrase, so a forgotten one never leaves you unable to see why something is broken.
 
 ## Composer editing
 
@@ -182,8 +235,8 @@ Inside the composer (`Ctrl+]`):
 - `/name` — set the session's display name — renames the remote pty.
 - `/relays` — relay priority & skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see Relays).
 - `/settings` — show or set client upload limits — `/settings [max-upload|async-upload <size>]`.
-- `/history` — page the remote session's command history (q to quit).
-- `/version` — show the clawee + claweed build versions.
+- `/history` — page the remote session's command history: `↑↓` or `j`/`k` a line, `Space`/`f` and `b` a page, `g`/`G` top / bottom, `q` quits. The pager prints no key bar.
+- `/version` — show the clawee + claweed build versions (`Esc` goes back).
 - `/restart` — restart the attached session in place.
 - `/reconnect` — force a reconnect now.
 - `/refresh` — repaint the remote screen now (alias `/redraw`).
