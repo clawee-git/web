@@ -1,7 +1,7 @@
 # web — clawee site
 
 - Repo: `clawee-git/web` (public) · the clawee.org marketing + docs site ·
-  trunk `main` · `gh.account = clawee-git` (call gh via `~/.claude/bin/ghp`,
+  trunk `main` · `gh.account = clawee-git` (call gh via `ghp`,
   never bare `gh`).
 - **Static, self-contained.** Plain HTML + CSS + a tiny vanilla JS for copy
   buttons. No build step, no framework, no CDNs, no webfonts (system monospace
