@@ -4,15 +4,15 @@
   "surfaces": [
     {
       "view": "top-level help",
-      "src": "cli:cmd/clawee/usage.go printUsage",
+      "src": "cli:cmd/clawee/usage.go buildUsage (generated from help.go helpTree)",
       "anchor": "/docs#commands",
-      "note": "TOP-LEVEL map only — several verbs accept more than it lists. Never sync the Commands table from this file alone."
+      "note": "TOP-LEVEL page only. The FULL surface — every level, every flag — is the GENERATED cli:docs/cli-help.md (`clawee docs`, build-gated by TestDocsFileIsInSync); sync command tables from that file, never from this page alone."
     },
     {
       "view": "relays verbs",
-      "src": "cli:cmd/clawee/relays_cmd.go relaysUsage",
+      "src": "cli:cmd/clawee/help.go helpTree (relays node) — rendered in cli:docs/cli-help.md",
       "anchor": "/docs#relays",
-      "note": "The full verb set. `auto` and `gateway` appear ONLY here, not in printUsage."
+      "note": "The full verb set (auto/gateway included). The hand-written relaysUsage string is GONE (2026-08-20 cli help port); `clawee relays --help` and the generated reference are the surface."
     },
     {
       "view": "session picker",
