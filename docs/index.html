@@ -168,9 +168,9 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             <p>On a device that's already paired, approve the pending fingerprint — from the CLI, or in
               the picker's devices view (<kbd>d</kbd> on the Local tab: <kbd>Enter</kbd> approves the
               selected pending key, <kbd>x</kbd> revokes):</p>
-            <pre><span class="p">$</span> clawee devices                <span class="mut"># enrolled keys + pending knocks</span>
-<span class="p">$</span> clawee devices approve [--label &lt;x&gt;] &lt;fp&gt;  <span class="mut"># enroll a pending device key</span>
-<span class="p">$</span> clawee devices revoke &lt;fp&gt;     <span class="mut"># remove a key or drop a knock</span></pre>
+            <pre><span class="p">$</span> clawee devices                                    <span class="mut"># pending knocks + enrolled keys</span>
+<span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
           </li>
           <li>
             <span class="st">Back on the new device</span>
@@ -185,6 +185,25 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           never answers). <kbd>l</kbd> opens the relay list from any pairing state — relay choice needs
           no gateway trust, and a bad relay is the usual reason a gateway looks unreachable.
         </p>
+        <p style="margin-top:16px">
+          A gateway now holds a <strong>list</strong> of OS users, not one — if none is selected yet the
+          form says <code>no user set</code> and offers only <code>set user</code> (no re-check: with
+          nobody chosen there is nothing to ask the gateway about):
+        </p>
+        <pre style="margin:10px 0 0">status    no user set
+
+<span class="mut">⏎ u set user · l relays · q quit</span></pre>
+        <p style="margin-top:16px">
+          Setting one (<kbd>u</kbd> or <kbd>Enter</kbd>, the same prompt as the gateway chooser's own
+          <kbd>u</kbd>) re-checks automatically; until the answer comes back the row reads
+          <code>user set — &lt;name&gt;</code> rather than reverting to the denial. If the gateway
+          refuses that <em>user</em> outright — a hello it rejects before ever looking at a key — the
+          form names the user, not a key problem, and still offers only <code>set user</code> plus a
+          manual re-check:
+        </p>
+        <pre style="margin:10px 0 0">status    user refused by the gateway — alice
+
+<span class="mut">⏎ u set user · r re-check · l relays · q quit</span></pre>
       </section>
 
       <!-- ATTACHING -->
@@ -213,9 +232,9 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <div class="cmds">
           <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.</span></div>
           <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
-          <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys (<code>approve [--label &lt;x&gt;] &lt;fp&gt;</code> / <code>revoke &lt;fp&gt;</code>).</span></div>
+          <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys, scoped to the current user (<code>approve [&lt;#&gt;|&lt;fingerprint&gt;] [--label &lt;x&gt;]</code> — bare = first asking, <code>#N</code> = pending index; <code>revoke &lt;fp&gt;</code>).</span></div>
           <div class="row"><code>relays [list|probe|priority|skip|use|auto|gateway]</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens the interactive list (see <a href="#relays">relays</a>).</span></div>
-          <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways (interactive; <kbd>l</kbd> = relays, <kbd>d</kbd> = devices); <code>use &lt;fp|name&gt;</code>; <code>list</code>; <code>name</code>/<code>user &lt;fp|name&gt; &lt;val&gt;</code>. Alias: <code>gw</code>.</span></div>
+          <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways — a tree of gateways and their users (interactive; <kbd>l</kbd> = relays, <kbd>d</kbd> = devices); <code>use &lt;fp|name&gt; [&lt;user&gt;]</code>; <code>list</code>; <code>name &lt;fp|name&gt; &lt;name&gt;</code>; <code>user &lt;fp|name&gt; add|rm &lt;user&gt;</code>. Alias: <code>gw</code>.</span></div>
           <div class="row"><code>doctor [--fix] [--yes]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can (<code>--yes</code> skips consent prompts). Always reports the clawee + claweed versions, including when the chain is down — quote that block in a bug report.</span></div>
           <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
           <div class="row"><code>lock-passphrase</code><span class="d">Set the lock passphrase in the local config. Once set it also <b>gates startup</b> — opening a session asks for it first (the maintenance commands above stay reachable). Ten free tries, then every further attempt waits 5 minutes.</span></div>
@@ -229,17 +248,18 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <p class="section-h">Reference</p>
         <h2>Gateways</h2>
         <p>
-          When your device is paired to more than one gateway, clawee scopes everything per gateway —
-          sessions, relays, and the OS user. Pick one by short name, fall back to the chooser, or set
-          friendly names.
+          Each gateway can hold more than one OS user now — clawee scopes sessions and devices per
+          <b>(gateway, user)</b> pair, not just per gateway. Pick a gateway by short name, fall back to the
+          chooser, or set friendly names; a gateway with no user added yet has nothing to attach as until
+          you add one.
         </p>
         <div class="cmds">
-          <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
-          <div class="row"><code>clawee gateway</code><span class="d">Open the interactive gateway <b>chooser</b> (piped: list local sessions grouped by gateway, with live/dead state).</span></div>
-          <div class="row"><code>clawee gateway use &lt;fp|name&gt;</code><span class="d">Switch to that gateway and attach.</span></div>
-          <div class="row"><code>clawee gateway list</code><span class="d">Table of every paired gateway — <code>GATEWAY · FP · RELAYS · SESSIONS · DEFAULT</code>.</span></div>
+          <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway, as its currently selected user (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
+          <div class="row"><code>clawee gateway</code><span class="d">Open the interactive gateway <b>chooser</b> — a tree of gateways with their users listed beneath (piped: list local sessions grouped by gateway, then by user, with live/dead state).</span></div>
+          <div class="row"><code>clawee gateway use &lt;fp|name&gt; [&lt;user&gt;]</code><span class="d">Switch to that gateway — and optionally that user — then attach.</span></div>
+          <div class="row"><code>clawee gateway list</code><span class="d">Table of every paired gateway — <code>GATEWAY · FP · RELAYS · USERS · SESSIONS · DEFAULT</code>.</span></div>
           <div class="row"><code>clawee gateway name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
-          <div class="row"><code>clawee gateway user &lt;fp|name&gt; &lt;user&gt;</code><span class="d">Set the per-gateway OS user (<code>-</code> clears the override).</span></div>
+          <div class="row"><code>clawee gateway user &lt;fp|name&gt; add|rm &lt;user&gt;</code><span class="d">Add or remove a user known at that gateway (<code>add</code> also selects it).</span></div>
         </div>
         <p style="margin-top:16px">
           <code>gw</code> is a short alias for <code>gateway</code> — <code>clawee gw list</code> and
@@ -252,10 +272,11 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         </p>
         <p style="margin-top:16px">Keys in the chooser:</p>
         <div class="cmds">
-          <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Enter</kbd></code><span class="d">Move · pick that gateway and attach.</span></div>
-          <div class="row"><code><kbd>l</kbd></code><span class="d">Drill into the selected gateway's <b>relays</b> and pin one (<kbd>Enter</kbd> picks, <kbd>q</kbd> goes back).</span></div>
-          <div class="row"><code><kbd>d</kbd></code><span class="d">Open the <b>devices</b> view for that gateway — <kbd>Enter</kbd> approves a pending key, <kbd>x</kbd> revokes.</span></div>
-          <div class="row"><code><kbd>r</kbd> · <kbd>u</kbd></code><span class="d">Set the gateway's short <b>name</b> · set its OS <b>user</b>.</span></div>
+          <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Enter</kbd></code><span class="d">Move over the tree (a gateway header, then its users indented beneath) · pick a user row to attach as that (gateway, user).</span></div>
+          <div class="row"><code><kbd>l</kbd></code><span class="d">Drill into the selected row's gateway <b>relays</b> and pin one (<kbd>Enter</kbd> picks, <kbd>q</kbd> goes back).</span></div>
+          <div class="row"><code><kbd>d</kbd></code><span class="d">Open the <b>devices</b> view for the selected user — <kbd>Enter</kbd> approves a pending key, <kbd>x</kbd> revokes.</span></div>
+          <div class="row"><code><kbd>r</kbd></code><span class="d">Set the gateway's short <b>name</b>.</span></div>
+          <div class="row"><code><kbd>u</kbd></code><span class="d"><b>Add a user</b> to the selected gateway (also the <code>+ add user</code> row's action). A gateway with none shows <code>(no user — press u to add)</code> and must have one added before it can be used.</span></div>
           <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Back, without switching.</span></div>
         </div>
       </section>
@@ -363,10 +384,12 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <h2>Devices</h2>
         <p>
           Every device that opens a session is a <strong>key</strong> enrolled on the box running
-          <code>claweed</code>. The devices view lists them — enrolled keys and pending knocks from
-          devices waiting to be let in. Open it with <kbd>d</kbd> on the picker's Local tab, or on a
-          selected gateway in the chooser. It needs a paired device: an untrusted key can't read the
-          list.
+          <code>claweed</code> — trust is per <strong>(gateway, user)</strong>, so the list you see is
+          always for one tenant. The devices view leads with the numbered <strong>pending</strong> queue
+          (devices waiting to be let in), then the enrolled keys; its title reads
+          <code>devices · &lt;gateway&gt; · &lt;user&gt;</code>. Open it with <kbd>d</kbd> on the
+          picker's Local tab, or on a selected user in the gateway chooser. It needs a paired device: an
+          untrusted key can't read the list.
         </p>
         <div class="cmds">
           <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>k</kbd>/<kbd>j</kbd></code><span class="d">Move between keys.</span></div>
@@ -377,9 +400,9 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <p style="margin-top:16px">
           The same three actions exist as commands, over the same list — use whichever fits:
         </p>
-        <pre><span class="p">$</span> clawee devices                              <span class="mut"># enrolled keys + pending knocks</span>
-<span class="p">$</span> clawee devices approve [--label &lt;x&gt;] &lt;fp&gt;   <span class="mut"># enroll a pending device key</span>
-<span class="p">$</span> clawee devices revoke &lt;fp&gt;                   <span class="mut"># remove a key or drop a knock</span></pre>
+        <pre><span class="p">$</span> clawee devices                                    <span class="mut"># pending knocks + enrolled keys, for the current user</span>
+<span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index, or a fingerprint</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
         <p style="margin-top:16px; color:var(--dim)">
           Revoking a device stops it opening <em>new</em> sessions immediately. A session it already has
           attached keeps running until it next reconnects.

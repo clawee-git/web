@@ -69,13 +69,25 @@ Two things have to line up: a **route** — burrowee binds your device to a gate
 
 2. **Approve it from an enrolled device** — from the CLI, or in the picker's devices view (`d` on the Local tab: Enter approves the selected pending key, `x` revokes):
 
-       clawee devices                              # enrolled keys + pending knocks
-       clawee devices approve [--label <x>] <fp>   # enroll a pending device key
-       clawee devices revoke <fp>                  # remove a key or drop a knock
+       clawee devices                                    # pending knocks + enrolled keys
+       clawee devices approve [<#>|<fp>] [--label <x>]    # bare = first asking, #N = pending index
+       clawee devices revoke <fp>                         # remove a key or drop a knock
 
 3. **Back on the new device.** The form re-checks every 10 seconds and drops into the ordinary picker once the key is trusted. Automatic polling stops after 10 minutes — Enter on the `re-check` row asks again at any time.
 
 If the gateway itself cannot be reached the form says `unreachable` and offers `continue` rather than pairing (a knock cannot be queued through a gateway that never answers). `l` opens the relay list from any pairing state — relay choice needs no gateway trust, and a bad relay is the usual reason a gateway looks unreachable.
+
+A gateway now holds a **list** of OS users, not one — if none is selected yet the form says `no user set` and offers only `set user` (no re-check: with nobody chosen there is nothing to ask the gateway about):
+
+    status    no user set
+
+    ⏎ u set user · l relays · q quit
+
+Setting one (`u` or Enter, the same prompt as the gateway chooser's own `u`) re-checks automatically; until the answer comes back the row reads `user set — <name>` rather than reverting to the denial. If the gateway refuses that *user* outright — a hello it rejects before ever looking at a key — the form names the user, not a key problem, and still offers only `set user` plus a manual re-check:
+
+    status    user refused by the gateway — alice
+
+    ⏎ u set user · r re-check · l relays · q quit
 
 ## Attaching
 
@@ -97,9 +109,9 @@ Every `clawee <command>` verb:
 
 - `status` — probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.
 - `sessions [--watch]` — list the daemon's pty sessions; `--watch` streams live session events.
-- `devices <list|approve|revoke>` — enroll and manage device keys (`approve [--label <x>] <fp>` / `revoke <fp>`).
+- `devices <list|approve|revoke>` — enroll and manage device keys, scoped to the current user (`approve [<#>|<fingerprint>] [--label <x>]` — bare = first asking, `#N` = pending index; `revoke <fp>`).
 - `relays [list|probe|priority|skip|use|auto|gateway]` — rank relays (LAN-first); bare `relays` opens the interactive list (see Relays).
-- `gateway [use|list|name|user …]` — switch gateways (interactive; `l` = relays, `d` = devices); `use <fp|name>`; `list`; `name`/`user <fp|name> <val>`. Alias: `gw`.
+- `gateway [use|list|name|user …]` — switch gateways — a tree of gateways and their users (interactive; `l` = relays, `d` = devices); `use <fp|name> [<user>]`; `list`; `name <fp|name> <name>`; `user <fp|name> add|rm <user>`. Alias: `gw`.
 - `doctor [--fix] [--yes]` — diagnose the local setup; `--fix` repairs what it can (`--yes` skips consent prompts). Always reports the clawee + claweed versions, including when the chain is down — quote that block in a bug report.
 - `update [--dry] [--force]` — self-update from release.clawee.org (shows the gap; skips if current).
 - `lock-passphrase` — set the lock passphrase in the local config. Once set it also **gates startup** — opening a session asks for it first (the maintenance commands stay reachable). Ten free tries, then every further attempt waits 5 minutes.
@@ -108,20 +120,20 @@ Every `clawee <command>` verb:
 
 ## Gateways
 
-When your device is paired to more than one gateway, clawee scopes everything per gateway — sessions, relays, and the OS user. Pick one by short name, fall back to the chooser, or set friendly names.
+Each gateway can hold more than one OS user now — clawee scopes sessions and devices per **(gateway, user)** pair, not just per gateway. Pick a gateway by short name, fall back to the chooser, or set friendly names; a gateway with no user added yet has nothing to attach as until you add one.
 
-- `clawee <name>` — attach scoped to that gateway (matches a short name, the gateway's name, or a fingerprint prefix).
-- `clawee gateway` — open the interactive gateway chooser (piped: list local sessions grouped by gateway, with live/dead state).
-- `clawee gateway use <fp|name>` — switch to that gateway and attach.
-- `clawee gateway list` — table of every paired gateway: GATEWAY · FP · RELAYS · SESSIONS · DEFAULT.
+- `clawee <name>` — attach scoped to that gateway, as its currently selected user (matches a short name, the gateway's name, or a fingerprint prefix).
+- `clawee gateway` — open the interactive gateway chooser — a tree of gateways with their users listed beneath (piped: list local sessions grouped by gateway, then by user, with live/dead state).
+- `clawee gateway use <fp|name> [<user>]` — switch to that gateway — and optionally that user — then attach.
+- `clawee gateway list` — table of every paired gateway: GATEWAY · FP · RELAYS · USERS · SESSIONS · DEFAULT.
 - `clawee gateway name <fp|name> <short>` — set a friendly short name for a gateway.
-- `clawee gateway user <fp|name> <user>` — set the per-gateway OS user (`-` clears the override).
+- `clawee gateway user <fp|name> add|rm <user>` — add or remove a user known at that gateway (`add` also selects it).
 
 `gw` is a short alias for `gateway` — `clawee gw list` and `clawee gateway list` are the same command.
 
 With a single gateway, none of this shows — `clawee` goes straight to the picker. With more than one, bare `clawee` uses your last gateway or opens the chooser; press `g` in the picker to switch.
 
-Keys in the chooser: `↑↓` move · `⏎` pick that gateway and attach · `l` drill into its relays and pin one · `d` open its devices view (⏎ approves a pending key, `x` revokes) · `r` set the short name · `u` set the OS user · `q`/`Esc` back.
+Keys in the chooser: `↑↓` move over the tree (a gateway header, then its users indented beneath) · `⏎` pick a user row and attach as that (gateway, user) · `l` drill into the selected row's gateway relays and pin one · `d` open the devices view for the selected user (⏎ approves a pending key, `x` revokes) · `r` set the gateway's short name · `u` add a user to the selected gateway (a gateway with none shows `(no user — press u to add)` and must have one added before it can be used) · `q`/`Esc` back.
 
 ## Relays
 
@@ -181,7 +193,7 @@ On the Remote tab the row actions differ — they act on the remote pty, not you
 
 ## Devices
 
-Every device that opens a session is a key enrolled on the box running `claweed`. The devices view lists them — enrolled keys and pending knocks from devices waiting to be let in. Open it with `d` on the picker's Local tab, or on a selected gateway in the chooser. It needs a paired device: an untrusted key cannot read the list.
+Every device that opens a session is a key enrolled on the box running `claweed` — trust is per **(gateway, user)**, so the list you see is always for one tenant. The devices view leads with the numbered **pending** queue (devices waiting to be let in), then the enrolled keys; its title reads `devices · <gateway> · <user>`. Open it with `d` on the picker's Local tab, or on a selected user in the gateway chooser. It needs a paired device: an untrusted key cannot read the list.
 
 - `↑↓` or `k`/`j` — move between keys.
 - `⏎` — approve the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.
@@ -190,9 +202,9 @@ Every device that opens a session is a key enrolled on the box running `claweed`
 
 The same three actions exist as commands, over the same list:
 
-    clawee devices                              # enrolled keys + pending knocks
-    clawee devices approve [--label <x>] <fp>   # enroll a pending device key
-    clawee devices revoke <fp>                  # remove a key or drop a knock
+    clawee devices                                    # pending knocks + enrolled keys, for the current user
+    clawee devices approve [<#>|<fp>] [--label <x>]    # bare = first asking, #N = pending index, or a fingerprint
+    clawee devices revoke <fp>                         # remove a key or drop a knock
 
 Revoking a device stops it opening *new* sessions immediately. A session it already has attached keeps running until it next reconnects.
 

@@ -75,6 +75,19 @@
 
   "syncs": [
     {
+      "date": "2026-08-20",
+      "scope": "gateway multi-user: tree picker (gateway + user rows), per-user devices view (pending-first, `devices · <gw> · <user>` title), devices approve by bare/index/fingerprint, and the pairing form's new no-user/user-refused states",
+      "released": {
+        "clawee": "unreleased (dev)",
+        "claweed": "unreleased (dev)"
+      },
+      "repos": {
+        "clawee-git/cli": "5ddcaa9",
+        "clawee-git/daemon": "f64b907"
+      },
+      "notes": "Synced against the DEV WORKTREES, not a released tag — the multi-user plan (docs/specs/2026-08-20-clawee-gateway-multi-user-design.md, resources repo) had not been cut at sync time, per the plan's own Task 13. Deliberately NOT against 'main' either: this documents what will ship once released. Updated #commands (devices/gateway top-level lines), #gateways (tree model: use <fp|name> [<user>], user <fp|name> add|rm <user>, GATEWAY list gains a USERS column, chooser keys r/u split — u now ADDS a user rather than overwriting one), #devices (per-(gateway,user) trust, pending-first queue, devices · <gw> · <user> title, approve [<#>|<fp>] semantics), and #pairing (new PairFormNoUser 'no user set' / 'user set — <user>' bar and PairFormUser 'user refused by the gateway — <user>' bar, plus the approve syntax). docs/index.html and llms-full.txt both updated (kept in lockstep per this repo's CLAUDE.md); the 'Docs synced' footer stamp is UNCHANGED — it names a released version, and none has shipped yet. Re-verify (and bump the stamp) once clawee/claweed actually release with this surface."
+    },
+    {
       "date": "2026-07-29",
       "scope": "stamp only — no page content changed",
       "released": {
