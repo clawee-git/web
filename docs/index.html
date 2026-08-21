@@ -90,6 +90,7 @@
           <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/claweed/install.sh | sh</code>
           <button class="copy" data-copy="curl -fsSL https://release.clawee.org/claweed/install.sh | sh">copy</button>
         </div>
+        <pre><span class="p">$</span> claweed setup            <span class="mut"># first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)</span></pre>
         <pre><span class="p">$</span> claweed update           <span class="mut"># update in place; skips if current</span>
 <span class="p">$</span> claweed update --force   <span class="mut"># reinstall the latest regardless</span></pre>
 
@@ -100,6 +101,16 @@
         </div>
         <pre><span class="p">$</span> clawee update            <span class="mut"># update in place; skips if current</span>
 <span class="p">$</span> clawee update --force    <span class="mut"># reinstall the latest regardless</span></pre>
+        <div class="callout">
+          <strong>Upgrading is one-way.</strong> Once a v0.2.x <code>clawee</code> writes <code>config.json</code>
+          or a session's <code>meta.json</code> in the multi-user schema, an <em>older</em> clawee binary
+          <b>refuses</b> the file outright rather than silently misreading it — there is no downgrade path.
+          Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id
+          lives in the system config root (moved there by the v0.2.0 migration ladder) and is an
+          auth-challenge input: a regenerated value silently refuses every already-enrolled device.
+          <code>claweed</code> never generates one on its own — only the installer's migration adopts it —
+          so treat that file as load-bearing, not disposable.
+        </div>
       </section>
 
       <!-- PAIRING -->
@@ -133,9 +144,11 @@
           </li>
           <li>
             <span class="st">Enroll it on the host</span>
-            <p>On the claweed box, register the key for your tenant. It enrolls under the host OS user you run it as — add <code>--user &lt;name&gt;</code> to target another (then connect with clawee's <code>-user &lt;name&gt;</code>):</p>
-            <pre><span class="p">$</span> claweed auth @id_ed25519.pub         <span class="mut"># from a file</span>
-<span class="p">$</span> claweed auth "ssh-ed25519 AAAA… "   <span class="mut"># or paste the key inline</span></pre>
+            <p>On the claweed box, register the key for your tenant — it enrolls against the <em>invoking</em> OS user (auth/devices/tenant all act on your own host login; there's no per-call user override). <code>claweed auth</code> is sugar over the full verb, <code>claweed tenant add</code> — renamed from the old <code>tenant add-key</code> spelling, which the released binary now refuses:</p>
+            <pre><span class="p">$</span> claweed auth @id_ed25519.pub         <span class="mut"># from a file — sugar over `tenant add`</span>
+<span class="p">$</span> claweed auth "ssh-ed25519 AAAA… "   <span class="mut"># or paste the key inline</span>
+<span class="p">$</span> claweed tenant add @id_ed25519.pub --data-dir &lt;dir&gt;  <span class="mut"># the full verb — --data-dir is required here</span></pre>
+            <p style="margin-top:8px; color:var(--dim)">Setting up your <em>own</em> login on a fresh host? <code>claweed setup</code> (see <a href="#install">install</a>) already bootstrapped it from your <code>~/.ssh/authorized_keys</code> — this step is for enrolling a different device's key.</p>
           </li>
           <li>
             <span class="st">Connect</span>
@@ -176,15 +189,21 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             <span class="st">Back on the new device</span>
             <p>The form re-checks itself every 10 seconds and drops into the ordinary picker once the
               key is trusted. Automatic polling stops after 10 minutes — <kbd>Enter</kbd> on the
-              <code>re-check</code> row asks again at any time.</p>
+              <code>re-check</code> row asks again at any time:</p>
+            <pre style="margin:10px 0 0">status    waiting for approval …
+
+<span class="mut">⏎ re-check · l relays · q quit</span></pre>
           </li>
         </ol>
         <p style="margin-top:16px">
           If the gateway itself can't be reached the form says <code>unreachable</code> and offers
           <code>continue</code> rather than pairing (a knock can't be queued through a gateway that
           never answers). <kbd>l</kbd> opens the relay list from any pairing state — relay choice needs
-          no gateway trust, and a bad relay is the usual reason a gateway looks unreachable.
+          no gateway trust, and a bad relay is the usual reason a gateway looks unreachable:
         </p>
+        <pre style="margin:10px 0 0">status    unreachable
+
+<span class="mut">⏎ continue · r re-check · l relays · q quit</span></pre>
         <p style="margin-top:16px">
           A gateway now holds a <strong>list</strong> of OS users, not one — if none is selected yet the
           form says <code>no user set</code> and offers only <code>set user</code> (no re-check: with
@@ -204,6 +223,13 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <pre style="margin:10px 0 0">status    user refused by the gateway — alice
 
 <span class="mut">⏎ u set user · r re-check · l relays · q quit</span></pre>
+        <div class="callout">
+          <strong>Revocation now bails to this screen.</strong> A device that's already attached when its
+          key is revoked used to keep re-dialing forever behind a silent <code>reconnecting…</code> — the
+          revocation was invisible until the operator happened to look. Closed: three <b>consecutive</b>
+          auth-class refusals during a captive reconnect now bail out of the retry loop and drop back to
+          this pairing view instead.
+        </div>
       </section>
 
       <!-- ATTACHING -->
@@ -214,14 +240,16 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <div class="cmds">
           <div class="row"><code>clawee</code><span class="d">Open the local session picker and attach.</span></div>
           <div class="row"><code>clawee &lt;gateway&gt;</code><span class="d">Select a gateway by name, then pick a session (see <a href="#gateways">gateways</a>).</span></div>
-          <div class="row"><code>-r</code><span class="d"><b>Resume</b> the most-recently-attached session.</span></div>
-          <div class="row"><code>-reconnect-timeout &lt;dur&gt;</code><span class="d">Per-attempt <b>reconnect deadline</b> (e.g. <code>5s</code>; default 5s).</span></div>
-          <div class="row"><code>-s &lt;sid&gt;</code><span class="d">Attach a remote pty <b>session id</b> directly.</span></div>
-          <div class="row"><code>-user &lt;name&gt;</code><span class="d">Gateway OS user to claim (default: <code>$USER</code>, or last-used).</span></div>
-          <div class="row"><code>-i &lt;key&gt;</code><span class="d">Private key to authenticate with (default: ssh-agent, then <code>~/.clawee/id_ed25519</code>).</span></div>
-          <div class="row"><code>-socket &lt;path&gt;</code><span class="d">burrowee transport daemon socket (default: the burrowee default).</span></div>
-          <div class="row"><code>-transport &lt;mode&gt;</code><span class="d">Force transport: <code>auto</code> | <code>ws</code> | <code>quic</code>.</span></div>
+          <div class="row"><code>-i &lt;key&gt;</code><span class="d">Private key file to authenticate with (default: ssh-agent, then <code>~/.clawee/id_ed25519</code>).</span></div>
+          <div class="row"><code>--reconnect-timeout &lt;deadline&gt;</code><span class="d">Per-attempt <b>reconnect deadline</b> (default: config, then <code>5s</code>).</span></div>
+          <div class="row"><code>-s &lt;sid&gt;</code><span class="d">Attach the remote pty <b>session id</b> directly.</span></div>
+          <div class="row"><code>--socket &lt;path&gt;</code><span class="d">Transport daemon socket path (default: <code>$BURROWEE_TRANSPORT_SOCK</code>, then config).</span></div>
+          <div class="row"><code>--transport &lt;mode&gt;</code><span class="d">Force transport: <code>auto</code> | <code>ws</code> | <code>quic</code> (empty = daemon default).</span></div>
+          <div class="row"><code>--user &lt;user&gt;</code><span class="d">Gateway OS user to claim for this run.</span></div>
         </div>
+        <p style="margin-top:16px; color:var(--dim)">
+          There is no <code>-r</code>/resume flag on the released binary — dropped from this page.
+        </p>
       </section>
 
       <!-- COMMANDS -->
@@ -230,17 +258,22 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <h2>Commands</h2>
         <p>Every <code>clawee &lt;command&gt;</code> verb:</p>
         <div class="cmds">
-          <div class="row"><code>status</code><span class="d">Probe the transport chain hop-by-hop: socket → daemon → relay → claweed → auth; also prints the clawee + claweed versions.</span></div>
+          <div class="row"><code>status</code><span class="d">Alias of <code>doctor</code> (read-only) — probe the chain hop-by-hop and report; also prints the clawee + claweed versions.</span></div>
           <div class="row"><code>sessions [--watch]</code><span class="d">List the daemon's pty sessions; <code>--watch</code> streams live session events.</span></div>
           <div class="row"><code>devices &lt;list|approve|revoke&gt;</code><span class="d">Enroll and manage device keys, scoped to the current user (<code>approve [&lt;#&gt;|&lt;fingerprint&gt;] [--label &lt;x&gt;]</code> — bare = first asking, <code>#N</code> = pending index; <code>revoke &lt;fp&gt;</code>).</span></div>
           <div class="row"><code>relays [list|probe|priority|skip|use|auto|gateway]</code><span class="d">Rank relays (LAN-first); bare <code>relays</code> opens the interactive list (see <a href="#relays">relays</a>).</span></div>
           <div class="row"><code>gateway [use|list|name|user …]</code><span class="d">Switch gateways — a tree of gateways and their users (interactive; <kbd>l</kbd> = relays, <kbd>d</kbd> = devices); <code>use &lt;fp|name&gt; [&lt;user&gt;]</code>; <code>list</code>; <code>name &lt;fp|name&gt; &lt;name&gt;</code>; <code>user &lt;fp|name&gt; add|rm &lt;user&gt;</code>. Alias: <code>gw</code>.</span></div>
           <div class="row"><code>doctor [--fix] [--yes]</code><span class="d">Diagnose the local setup; <code>--fix</code> repairs what it can (<code>--yes</code> skips consent prompts). Always reports the clawee + claweed versions, including when the chain is down — quote that block in a bug report.</span></div>
-          <div class="row"><code>update [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current).</span></div>
+          <div class="row"><code>update [--auto] [--dry] [--force]</code><span class="d">Self-update from <code>release.clawee.org</code> (shows the gap; skips if current); <code>--auto</code> installs the update unattended; <code>--dry</code> prints the plan only.</span></div>
           <div class="row"><code>lock-passphrase</code><span class="d">Set the lock passphrase in the local config. Once set it also <b>gates startup</b> — opening a session asks for it first (the maintenance commands above stay reachable). Ten free tries, then every further attempt waits 5 minutes.</span></div>
+          <div class="row"><code>docs</code><span class="d">Print the full CLI reference as markdown (docs sites, AI agents).</span></div>
           <div class="row"><code>version</code><span class="d">Print the clawee version (also <code>--version</code>).</span></div>
-          <div class="row"><code>help</code><span class="d">Print the full help (also <code>--help</code>, <code>-h</code>).</span></div>
         </div>
+        <p style="margin-top:16px; color:var(--dim)">
+          There is no <code>help</code> verb — help spellings are flags only: <code>-h</code> / <code>--h</code> / <code>-help</code> / <code>--help</code>.
+          Every verb rejects stray arguments; a usage refusal exits <code>2</code> on clawee, <code>64</code> on claweed.
+          Run <code>clawee &lt;command&gt; --help</code> for that command's own page (<code>clawee docs</code> prints the full reference as markdown).
+        </p>
       </section>
 
       <!-- GATEWAYS -->
@@ -270,15 +303,35 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
           <kbd>g</kbd> in the picker to switch.
         </p>
+        <p style="margin-top:16px">
+          The chooser's table is three aligned columns — <code>GATEWAY | USER | SESSIONS</code>, plus a
+          <code>LIVE</code> column once a gateway has been probed. Each gateway is at least a 3-line
+          block: its name alone on the first line, then the gateway's <b>full 16-hex fingerprint</b>
+          sharing a line with its first user, further users indented beneath, and a selectable dim
+          <code>+ add user</code> row closing every gateway (<kbd>Enter</kbd> on it does the same thing
+          as <kbd>u</kbd>). The pick is a <b>user</b>, not a gateway:
+        </p>
+        <pre style="margin:10px 0 0"><span class="mut">    GATEWAY               USER    SESSIONS  LIVE</span>
+<span class="p">▸</span>   workshop
+    a1b2c3d4e5f6a7b8      alice   2         1/2
+                          bob     0         —
+                          <span class="mut">+ add user</span>
+    10.0.0.4              <span class="mut">+ add user</span></pre>
         <p style="margin-top:16px">Keys in the chooser:</p>
         <div class="cmds">
           <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Enter</kbd></code><span class="d">Move over the tree (a gateway header, then its users indented beneath) · pick a user row to attach as that (gateway, user).</span></div>
           <div class="row"><code><kbd>l</kbd></code><span class="d">Drill into the selected row's gateway <b>relays</b> and pin one (<kbd>Enter</kbd> picks, <kbd>q</kbd> goes back).</span></div>
           <div class="row"><code><kbd>d</kbd></code><span class="d">Open the <b>devices</b> view for the selected user — <kbd>Enter</kbd> approves a pending key, <kbd>x</kbd> revokes.</span></div>
           <div class="row"><code><kbd>r</kbd></code><span class="d">Set the gateway's short <b>name</b>.</span></div>
-          <div class="row"><code><kbd>u</kbd></code><span class="d"><b>Add a user</b> to the selected gateway (also the <code>+ add user</code> row's action). A gateway with none shows <code>(no user — press u to add)</code> and must have one added before it can be used.</span></div>
+          <div class="row"><code><kbd>u</kbd></code><span class="d"><b>Add a user</b> to the selected gateway (also the <code>+ add user</code> row's action). A gateway with none has nothing but that row and must have one added before it can be used.</span></div>
           <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Back, without switching.</span></div>
         </div>
+        <p style="margin-top:16px; color:var(--dim)">
+          The bar itself has three variants: in the picker's own chooser it reads <code>… · u user · q back</code>;
+          reached bare (a countdown present but not armed) it's the same bar with <code>q quit</code>; while a
+          launch countdown is <b>armed</b>, <code>u user</code> is dropped to make room for the countdown label —
+          <kbd>u</kbd> still adds a user, it's just not named on that bar.
+        </p>
       </section>
 
       <!-- RELAYS -->
@@ -345,7 +398,7 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <div class="cmds">
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
           <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the lock passphrase).</span></div>
-          <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty).</span></div>
+          <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen — on claweed ≥ <b>v0.1.53</b> this repaints straight from the session holder, on the <b>main screen too</b>, not just the alt screen; an older holder falls back to the previous app-nudge. (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty.)</span></div>
         </div>
         <p style="margin-top:18px">
           clawee has one more full-screen view behind most of these keys. Each takes over the terminal,
@@ -370,12 +423,28 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           <div class="row"><code><kbd>g</kbd></code><span class="d">Open the gateway chooser (only with more than one gateway).</span></div>
           <div class="row"><code><kbd>q</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Quit clawee.</span></div>
         </div>
+        <p style="margin-top:18px; color:var(--dim)">
+          A failed <kbd>n</kbd> new-session or attach keeps you in the picker rather than exiting: a stray
+          <code>new session failed: … — ⏎ retries</code> or <code>attach failed: … — pick again to retry</code>
+          notice appears and <kbd>Enter</kbd> tries again.
+        </p>
         <p style="margin-top:18px">On the <b>Remote</b> tab the row actions differ — they act on the remote pty, not your local session:</p>
         <div class="cmds">
           <div class="row"><code><kbd>t</kbd> · <kbd>x</kbd></code><span class="d">Restart the session · stop it.</span></div>
           <div class="row"><code><kbd>d</kbd></code><span class="d">Detach whoever is attached (here <kbd>d</kbd> is <em>not</em> the devices view).</span></div>
           <div class="row"><code><kbd>r</kbd> · <kbd>p</kbd> · <kbd>l</kbd></code><span class="d">Rename · purge · relays, same as the Local tab.</span></div>
         </div>
+        <p style="margin-top:16px">
+          A remote session's state, on the Remote tab: <b>connected</b> (someone's attached) ·
+          <b>idle</b> (alive, nobody attached) · <b>interrupted</b> (the holder is gone — a reboot or
+          crash — but attaching <b>restores it</b>: the full retained scrollback replays, with a
+          <code>── session re-established ──</code> marker, naming what was running when it can) ·
+          <b>exited</b> · <b>closed</b>.
+        </p>
+        <p style="margin-top:8px; color:var(--dim)">
+          green = connected · blue = idle · gray = detached · <b>interrupted = attach to restore</b> ·
+          live = recency · size = total output · last col = who holds it
+        </p>
       </section>
 
       <!-- DEVICES -->
@@ -403,9 +472,23 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <pre><span class="p">$</span> clawee devices                                    <span class="mut"># pending knocks + enrolled keys, for the current user</span>
 <span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index, or a fingerprint</span>
 <span class="p">$</span> clawee devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
+        <p style="margin-top:8px; color:var(--dim)">
+          <code>approve</code> prints the resolved fingerprint it just enrolled — quote that line back if
+          you need to prove which key it was.
+        </p>
+        <p style="margin-top:16px">
+          The daemon side has the same three verbs, host-local, on the box running <code>claweed</code> —
+          they act on the <em>invoking</em> user only (a cross-user <code>manage</code> is referenced in
+          claweed's own help text but is not yet built — don't reach for it):
+        </p>
+        <pre><span class="p">$</span> claweed devices                                    <span class="mut"># pending knocks + enrolled keys, host-local</span>
+<span class="p">$</span> claweed devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># same semantics as clawee's</span>
+<span class="p">$</span> claweed devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
         <p style="margin-top:16px; color:var(--dim)">
           Revoking a device stops it opening <em>new</em> sessions immediately. A session it already has
-          attached keeps running until it next reconnects.
+          attached keeps running until its next reconnect — three consecutive auth refusals during that
+          reconnect now bail the retry loop and drop back to the <a href="#pairing">pairing view</a>
+          instead of redialing forever behind a silent <code>reconnecting…</code>.
         </p>
       </section>
 
@@ -433,6 +516,14 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         <p style="margin-top:16px">
           Arrows, function keys and stray mouse clicks are swallowed rather than typed into the
           passphrase.
+        </p>
+        <p style="margin-top:16px">
+          <b>Unlocking</b> always lands you back in passthrough — a composer that was open before the
+          lock is closed, not silently reopened. The screen you had before locking is preserved as-is; a
+          quiet unlock just repaints from the session holder. The one exception: if the connection dropped
+          and reconnected <em>while</em> locked, the buffered replay is discarded rather than risk showing
+          stale output, and a single dim hint appears once — <code>reconnected while locked — ctrl+[ to
+          refresh</code>.
         </p>
         <div class="callout">
           <strong>Startup gate.</strong> With a passphrase set, <code>clawee</code> asks for it before
