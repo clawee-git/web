@@ -82,6 +82,28 @@
             <em>different</em> machines, so the first device is enrolled by hand on the host; extra
             devices can then be approved remotely.
           </p>
+          <p>The first device on a new host is enrolled by hand:</p>
+          <ol class="steps">
+            <li>
+              <span class="st">Get your device key</span>
+              <p>clawee mints <code>~/.clawee/id_ed25519</code> the first time it runs; the private key never leaves the client. <code>clawee status</code> guarantees the key exists and prints its fingerprint — or mint it on its own with <code>clawee doctor --fix</code>. Then read the public half:</p>
+              <pre><span class="p">$</span> clawee status                <span class="mut"># brings up the chain; mints the key + shows its fingerprint</span>
+<span class="p">$</span> clawee doctor --fix          <span class="mut"># (or) mint / repair the identity key on its own</span>
+<span class="p">$</span> cat ~/.clawee/id_ed25519.pub  <span class="mut"># the public key to enroll</span></pre>
+            </li>
+            <li>
+              <span class="st">Send the public key to the host</span>
+              <p>Copy that <code>id_ed25519.pub</code> line to the box running <code>claweed</code> — paste it, <code>scp</code> it, however you like. Only the <em>public</em> key travels.</p>
+            </li>
+            <li>
+              <span class="st">Enroll it on the host</span>
+              <p>On the claweed box, register the key for your tenant — it enrolls against the <em>invoking</em> OS user (auth/devices/tenant all act on your own host login; there's no per-call user override). <code>claweed auth</code> is sugar over the full verb, <code>claweed tenant add</code> — renamed from the old <code>tenant add-key</code> spelling, which the released binary now refuses:</p>
+              <pre><span class="p">$</span> claweed auth @id_ed25519.pub         <span class="mut"># from a file — sugar over `tenant add`</span>
+<span class="p">$</span> claweed auth "ssh-ed25519 AAAA… "   <span class="mut"># or paste the key inline</span>
+<span class="p">$</span> claweed tenant add @id_ed25519.pub --data-dir &lt;dir&gt;  <span class="mut"># the full verb — --data-dir is required here</span></pre>
+              <p style="margin-top:8px; color:var(--dim)">Setting up your <em>own</em> login on a fresh host? <code>claweed setup</code> (see <a href="/docs/quickstart#install">install</a>) already bootstrapped it from your <code>~/.ssh/authorized_keys</code> — this step is for enrolling a different device's key.</p>
+            </li>
+          </ol>
           <div class="callout">
             <strong>Additional devices — pair from the picker.</strong> Once one device is enrolled you
             don't need host access for the next one. On the new device just run <code>clawee</code>: an
