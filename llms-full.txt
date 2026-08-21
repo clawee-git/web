@@ -21,6 +21,8 @@ clawee is a **client** — it runs on top of [burrowee](https://burrowee.com), t
 - **burrowee installed** — get it at [burrowee.com](https://burrowee.com). clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).
 - **a paired gateway** — your device must be bootstrapped against at least one burrowee gateway (see pairing below). Without a gateway binding there's no route, and clawee will tell you so.
 
+**Why burrowee?** clawee deliberately owns no transport of its own. burrowee handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the terminal — sessions, the picker, uploads, the composer. Learn more at [burrowee.com](https://burrowee.com).
+
 Supported clients: macOS and Linux. A box that *hosts* sessions also runs `claweed` (the session broker).
 
 ## Get running
@@ -42,7 +44,7 @@ Two components, each **installed** with a one-liner (fetched over TLS and signat
 
    This is transport only — it carries no trust on its own.
 
-4. Pair the device — trust. `claweed setup` already bootstrapped *your own* login from `~/.ssh/authorized_keys` — if this is the box you ran it on, that device is already trusted and you can skip ahead to attach. Enrolling an *additional* device is two steps: knock, then approve.
+4. Pair the device — trust. `claweed setup` already bootstrapped trust for *your own* login — every key already listed in the host's `~/.ssh/authorized_keys`, the same keys your ssh-agent offers when you SSH into that box. If the device you're pairing from holds one of those keys, it's already trusted and you can skip ahead to attach. A device with no matching key — or a host where `claweed setup` never ran — enrolls by hand instead; see [pairing a device](https://clawee.org/docs/devices#pairing) for that first-device walkthrough. Enrolling an *additional* device from the picker is two steps: knock, then approve.
 
    On the new device, run `clawee` — an untrusted key can't open a session, so the picker opens as a **pairing form** instead. Press Enter on the `pair` row to send the knock:
 
@@ -1071,6 +1073,8 @@ See the full generated references: [clawee CLI reference](https://clawee.org/doc
 ---
 
 Full generated CLI references, verbatim from each binary's own help renderer: https://clawee.org/docs/clawee (raw markdown: https://clawee.org/docs/clawee/cli-help.md) and https://clawee.org/docs/claweed (raw markdown: https://clawee.org/docs/claweed/cli-help.md).
+
+There is no `help` verb — help spellings are flags only: `-h` / `--h` / `-help` / `--help`. Every verb rejects stray arguments; a usage refusal exits `2` on clawee, `64` on claweed. Run `clawee <command> --help` for that command's own page (`clawee docs` prints the full reference as markdown) — or browse the full generated reference: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
 
 ---
 

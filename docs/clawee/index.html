@@ -32,7 +32,7 @@
       <span class="spacer"></span>
       <a class="link" href="/docs">Docs</a>
       <a class="link" href="https://burrowee.com">burrowee</a>
-      <a class="cta" href="/docs#install">Install</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
     </div>
   </header>
 
@@ -93,6 +93,12 @@
       <p style="margin-top:-6px">
         See also the <a href="/docs/claweed">claweed CLI reference</a> and the
         <a href="/docs">main docs</a>.
+      </p>
+      <p style="margin-top:16px; color:var(--dim)">
+        There is no <code>help</code> verb — help spellings are flags only: <code>-h</code> / <code>--h</code> / <code>-help</code> / <code>--help</code>.
+        Every verb rejects stray arguments; a usage refusal exits <code>2</code> on clawee, <code>64</code> on claweed.
+        Run <code>clawee &lt;command&gt; --help</code> for that command's own page (<code>clawee docs</code> prints the full reference as markdown) — or browse the full generated reference:
+        <a href="/docs/clawee">clawee CLI reference</a> · <a href="/docs/claweed">claweed CLI reference</a>.
       </p>
 
       <section id="clawee">

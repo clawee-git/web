@@ -63,6 +63,12 @@
           <li><strong>burrowee installed</strong> — get it at <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee.com</a>. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).</li>
           <li><strong>a paired gateway</strong> — your device must be bootstrapped against at least one burrowee gateway (see <a href="#pairing">pairing</a> below). Without a gateway binding there's no route, and clawee will tell you so.</li>
         </ul>
+        <div class="callout">
+          <strong>Why burrowee?</strong> clawee deliberately owns no transport of its own. burrowee
+          handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the
+          terminal — sessions, the picker, uploads, the composer. Learn more at
+          <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee.com</a>.
+        </div>
         <p>Supported clients: macOS and Linux. A box that <em>hosts</em> sessions also runs <code>claweed</code> (the session broker).</p>
       </section>
 
@@ -100,10 +106,13 @@
           <li id="pairing">
             <span class="st">Pair the device — trust</span>
             <p>
-              <code>claweed setup</code> already bootstrapped <em>your own</em> login from
-              <code>~/.ssh/authorized_keys</code> — if this is the box you ran it on, that device is already
-              trusted and you can skip ahead to <a href="#attach">attach</a>. Enrolling an <em>additional</em>
-              device is two steps: knock, then approve.
+              <code>claweed setup</code> already bootstrapped trust for <em>your own</em> login — every key
+              already listed in the host's <code>~/.ssh/authorized_keys</code>, the same keys your ssh-agent
+              offers when you SSH into that box. If the device you're pairing from holds one of those keys,
+              it's already trusted and you can skip ahead to <a href="#attach">attach</a>. A device with no
+              matching key — or a host where <code>claweed setup</code> never ran — enrolls by hand instead;
+              see <a href="/docs/devices#pairing">pairing a device</a> for that first-device walkthrough.
+              Enrolling an <em>additional</em> device from the picker is two steps: knock, then approve.
             </p>
             <p>On the new device, run <code>clawee</code> — an untrusted key can't open a session, so the picker opens as a <strong>pairing form</strong> instead. Press <kbd>Enter</kbd> on the <code>pair</code> row to send the knock:</p>
             <pre>gateway   workshop (SHA256:a1b2c3d4)
