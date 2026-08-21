@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — sessions &amp; keys</title>
+  <meta name="description" content="Attaching and its flags, the session picker, views &amp; keys, locking, the composer, and slash commands.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — sessions &amp; keys">
+  <meta property="og:description" content="Attaching and its flags, the session picker, views &amp; keys, locking, the composer, and slash commands.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/sessions">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — sessions &amp; keys">
+  <meta name="twitter:description" content="Attaching and its flags, the session picker, views &amp; keys, locking, the composer, and slash commands.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-wide docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions" class="active">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
+      <!-- TOC -->
+      <nav class="toc">
+        <p class="t">Contents</p>
+        <ul>
+          <li><a href="#attach">Attaching</a></li>
+          <li><a href="#keys">Views &amp; keys</a></li>
+          <li><a href="#lock">Locking</a></li>
+          <li><a href="#composer">Composer editing</a></li>
+          <li><a href="#slash">Slash commands</a></li>
+          <li><a href="#reference">CLI reference</a></li>
+          <li><a href="#cli-clawee">clawee</a></li>
+          <li><a href="#cli-sessions">clawee sessions</a></li>
+          <li><a href="#cli-lock-passphrase">clawee lock-passphrase</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc">
+        <!-- ATTACHING -->
+        <section id="attach">
+          <p class="section-h">Daily use</p>
+          <h1>Attaching</h1>
+          <p>Run <code>clawee</code> with no arguments to open the session picker and attach. Flags tune the bare invocation:</p>
+          <div class="cmds">
+            <div class="row"><code>clawee</code><span class="d">Open the local session picker and attach.</span></div>
+            <div class="row"><code>clawee &lt;gateway&gt;</code><span class="d">Select a gateway by name, then pick a session (see <a href="/docs/gateways">gateways</a>).</span></div>
+            <div class="row"><code>-i &lt;key&gt;</code><span class="d">Private key file to authenticate with (default: ssh-agent, then <code>~/.clawee/id_ed25519</code>).</span></div>
+            <div class="row"><code>--reconnect-timeout &lt;deadline&gt;</code><span class="d">Per-attempt <b>reconnect deadline</b> (default: config, then <code>5s</code>).</span></div>
+            <div class="row"><code>-s &lt;sid&gt;</code><span class="d">Attach the remote pty <b>session id</b> directly.</span></div>
+            <div class="row"><code>--socket &lt;path&gt;</code><span class="d">Transport daemon socket path (default: <code>$BURROWEE_TRANSPORT_SOCK</code>, then config).</span></div>
+            <div class="row"><code>--transport &lt;mode&gt;</code><span class="d">Force transport: <code>auto</code> | <code>ws</code> | <code>quic</code> (empty = daemon default).</span></div>
+            <div class="row"><code>--user &lt;user&gt;</code><span class="d">Gateway OS user to claim for this run.</span></div>
+          </div>
+          <p style="margin-top:16px; color:var(--dim)">
+            There is no <code>-r</code>/resume flag on the released binary.
+          </p>
+        </section>
+
+        <!-- KEYS -->
+        <section id="keys">
+          <p class="section-h">Reference</p>
+          <h2>Views &amp; keys</h2>
+          <p>Once attached, keystrokes pass through to the remote shell except:</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Open the command composer (type a <code>/command</code> or text; Enter sends).</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen (unlock with the lock passphrase).</span></div>
+            <div class="row"><code><kbd>F5</kbd> · <kbd>Ctrl</kbd>+<kbd>[</kbd></code><span class="d">Redraw the remote screen — on claweed ≥ <b>v0.1.53</b> this repaints straight from the session holder, on the <b>main screen too</b>, not just the alt screen; an older holder falls back to the previous app-nudge. (<kbd>Ctrl</kbd>+<kbd>[</kbd> needs the kitty keyboard protocol, e.g. Ghostty.)</span></div>
+          </div>
+          <p style="margin-top:18px">
+            clawee has one more full-screen view behind most of these keys. Each takes over the terminal,
+            carries its key bar in the header, and leaves with <kbd>q</kbd>:
+          </p>
+          <div class="cmds">
+            <div class="row"><code>session picker</code><span class="d">Bare <code>clawee</code> — local + remote sessions. Keys below.</span></div>
+            <div class="row"><code>pairing form</code><span class="d">The picker on an unpaired device — see <a href="/docs/devices">pairing</a>.</span></div>
+            <div class="row"><code>gateway chooser</code><span class="d"><kbd>g</kbd>, or <code>clawee gateway</code> — see <a href="/docs/gateways">gateways</a>.</span></div>
+            <div class="row"><code>relay list</code><span class="d"><code>/relays</code>, <code>clawee relays</code>, or <kbd>l</kbd> from the picker / chooser — see <a href="/docs/relays">relays</a>.</span></div>
+            <div class="row"><code>devices view</code><span class="d"><kbd>d</kbd> on the picker's Local tab or in the chooser — see <a href="/docs/devices">devices</a>.</span></div>
+            <div class="row"><code>lock screen</code><span class="d"><kbd>Ctrl</kbd>+<kbd>\</kbd>, an idle timeout, or clawee's startup — see <a href="#lock">locking</a>.</span></div>
+            <div class="row"><code>history pager</code><span class="d"><code>/history</code> — see <a href="#slash">slash commands</a>.</span></div>
+            <div class="row"><code>version panel</code><span class="d"><code>/version</code> — clawee + claweed builds; <kbd>Esc</kbd> goes back.</span></div>
+          </div>
+          <p style="margin-top:18px">In the session picker (not while attached) — these never reach the remote shell:</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>←</kbd> <kbd>→</kbd> · <kbd>Enter</kbd></code><span class="d">Switch the Local / Remote tab · attach the selected session.</span></div>
+            <div class="row"><code><kbd>n</kbd> · <kbd>r</kbd> · <kbd>x</kbd> · <kbd>p</kbd></code><span class="d">New session · rename · close · purge.</span></div>
+            <div class="row"><code><kbd>l</kbd></code><span class="d">Switch the gateway's <b>relay</b> right there — a compact list, <kbd>Enter</kbd> switches, <kbd>q</kbd> backs out.</span></div>
+            <div class="row"><code><kbd>d</kbd></code><span class="d">Local tab: open the <b>devices</b> view (approve / revoke device keys). On the Remote tab <kbd>d</kbd> is detach.</span></div>
+            <div class="row"><code><kbd>g</kbd></code><span class="d">Open the gateway chooser (only with more than one gateway).</span></div>
+            <div class="row"><code><kbd>q</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Quit clawee.</span></div>
+          </div>
+          <p style="margin-top:18px; color:var(--dim)">
+            A failed <kbd>n</kbd> new-session or attach keeps you in the picker rather than exiting: a stray
+            <code>new session failed: … — ⏎ retries</code> or <code>attach failed: … — pick again to retry</code>
+            notice appears and <kbd>Enter</kbd> tries again.
+          </p>
+          <p style="margin-top:18px">On the <b>Remote</b> tab the row actions differ — they act on the remote pty, not your local session:</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>t</kbd> · <kbd>x</kbd></code><span class="d">Restart the session · stop it.</span></div>
+            <div class="row"><code><kbd>d</kbd></code><span class="d">Detach whoever is attached (here <kbd>d</kbd> is <em>not</em> the devices view).</span></div>
+            <div class="row"><code><kbd>r</kbd> · <kbd>p</kbd> · <kbd>l</kbd></code><span class="d">Rename · purge · relays, same as the Local tab.</span></div>
+          </div>
+          <p style="margin-top:16px">
+            A remote session's state, on the Remote tab: <b>connected</b> (someone's attached) ·
+            <b>idle</b> (alive, nobody attached) · <b>interrupted</b> (the holder is gone — a reboot or
+            crash — but attaching <b>restores it</b>: the full retained scrollback replays, with a
+            <code>── session re-established · was running: &lt;cmd&gt; ──</code> marker when the daemon
+            knows the foreground command (bare <code>── session re-established ──</code> when it
+            doesn't; a <code>claude</code> session gets a <code>claude --continue</code> hint)) ·
+            <b>exited</b> · <b>closed</b>.
+          </p>
+          <p style="margin-top:8px; color:var(--dim)">
+            green = connected · blue = idle · gray = detached · <b>interrupted = attach to restore</b> ·
+            live = recency · size = total output · last col = who holds it
+          </p>
+        </section>
+
+        <!-- LOCK -->
+        <section id="lock">
+          <p class="section-h">Reference</p>
+          <h2>Locking</h2>
+          <p>
+            Set a passphrase and clawee can cover the screen — on demand, after an idle period, or before
+            it will open a session at all. The lock screen shows the session, gateway, relay and versions,
+            but no terminal content.
+          </p>
+          <div class="cmds">
+            <div class="row"><code>clawee lock-passphrase</code><span class="d">Set the passphrase (masked entry). This is what turns the startup gate on.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd> · <code>/lock</code></code><span class="d">Lock now — from the session, or from the composer.</span></div>
+            <div class="row"><code>/passphrase</code><span class="d">Set or clear the passphrase from inside a session.</span></div>
+          </div>
+          <p style="margin-top:16px">The lock screen tells you to type the passphrase and press <kbd>Enter</kbd>. It accepts a little more than that:</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>Enter</kbd></code><span class="d">Try the passphrase.</span></div>
+            <div class="row"><code><kbd>Backspace</kbd></code><span class="d">Delete one character.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>U</kbd></code><span class="d"><b>Reveal</b> — toggle masking, to check what you typed.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Backspace</kbd></code><span class="d">Clear the whole entry.</span></div>
+          </div>
+          <p style="margin-top:16px">
+            Arrows, function keys and stray mouse clicks are swallowed rather than typed into the
+            passphrase.
+          </p>
+          <p style="margin-top:16px">
+            <b>Unlocking</b> always lands you back in passthrough — a composer that was open before the
+            lock is closed, not silently reopened. The screen you had before locking is preserved as-is; a
+            quiet unlock just repaints from the session holder. The one exception: if the connection dropped
+            and reconnected <em>while</em> locked, the buffered replay is discarded rather than risk showing
+            stale output, and a single dim hint appears once — <code>reconnected while locked — ctrl+[ to
+            refresh</code>.
+          </p>
+          <div class="callout">
+            <strong>Startup gate.</strong> With a passphrase set, <code>clawee</code> asks for it before
+            opening a session — the same screen, before any network. Ten tries are free; from the tenth,
+            each further attempt waits 5 minutes, counted down on screen and remembered across restarts.
+            <kbd>Ctrl</kbd>+<kbd>C</kbd> gives up (the in-session lock can't be dismissed that way — it's
+            guarding a live session). The maintenance commands — <code>status</code>, <code>doctor</code>,
+            <code>relays</code>, <code>devices</code>, <code>update</code> — stay reachable without the
+            passphrase, so a forgotten one never leaves you unable to see why something's broken.
+          </div>
+        </section>
+
+        <!-- COMPOSER -->
+        <section id="composer">
+          <p class="section-h">Reference</p>
+          <h2>Composer editing</h2>
+          <p>Keys inside the command composer (opened with <kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>Enter</kbd> · <kbd>Shift</kbd>+<kbd>Enter</kbd></code><span class="d">Send the line · insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty).</span></div>
+            <div class="row"><code>Paste</code><span class="d">Multi-line pastes stay in the box; a pasted <b>file path</b> uploads the file; very large text is uploaded as a file too.</span></div>
+            <div class="row"><code><kbd>←</kbd> / <kbd>→</kbd></code><span class="d">Move the cursor one character.</span></div>
+            <div class="row"><code><kbd>Home</kbd>/<kbd>End</kbd> · <kbd>Ctrl</kbd>+<kbd>A</kbd>/<kbd>E</kbd></code><span class="d">Jump to the current <b>line</b> start / end.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Home</kbd>/<kbd>End</kbd></code><span class="d">Jump to the <b>buffer</b> start / end (on a Mac laptop: <kbd>Fn</kbd>+<kbd>Ctrl</kbd>+<kbd>←</kbd>/<kbd>→</kbd>).</span></div>
+            <div class="row"><code><kbd>↑</kbd> / <kbd>↓</kbd></code><span class="d">Move between lines; at the top/bottom edge, recall command history.</span></div>
+            <div class="row"><code><kbd>Backspace</kbd> / <kbd>Del</kbd></code><span class="d">Delete before / after the cursor.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>K</kbd> / <kbd>Ctrl</kbd>+<kbd>U</kbd></code><span class="d">Kill to line end / to line start.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>Backspace</kbd></code><span class="d">Kill to line start (same as <kbd>Ctrl</kbd>+<kbd>U</kbd>).</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>L</kbd> · <kbd>Ctrl</kbd>+<kbd>C</kbd></code><span class="d">Clear the current line · clear the box (stays open).</span></div>
+            <div class="row"><code><kbd>Tab</kbd></code><span class="d">Complete the <code>/command</code>.</span></div>
+            <div class="row"><code><kbd>Esc</kbd> · <kbd>Ctrl</kbd>+<kbd>]</kbd></code><span class="d">Close the composer.</span></div>
+            <div class="row"><code><kbd>Ctrl</kbd>+<kbd>\</kbd></code><span class="d">Lock the screen.</span></div>
+          </div>
+        </section>
+
+        <!-- SLASH -->
+        <section id="slash">
+          <p class="section-h">Reference</p>
+          <h2>Slash commands</h2>
+          <p>Inside the composer (<kbd>Ctrl</kbd>+<kbd>]</kbd>):</p>
+          <div class="cmds">
+            <div class="row"><code>/upload</code><span class="d">Send a file or directory — <code>/upload &lt;path&gt;</code> (also: paste a path or drop a file). Directories go as tar.gz; uploads land in a dated <code>uploads/&lt;date&gt;/…</code> dir on claweed ≥ v0.1.30.</span></div>
+            <div class="row"><code>/download</code><span class="d">Fetch a remote file or dir to your machine — <code>/download &lt;path&gt;</code>.</span></div>
+            <div class="row"><code>/name</code><span class="d">Set the session's display name — renames the <b>remote</b> pty.</span></div>
+            <div class="row"><code>/relays</code><span class="d">Relay priority &amp; skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see <a href="/docs/relays">relays</a>).</span></div>
+            <div class="row"><code>/settings</code><span class="d">Show or set client upload limits — <code>/settings [max-upload|async-upload &lt;size&gt;]</code>.</span></div>
+            <div class="row"><code>/history</code><span class="d">Page the remote session's command history — <kbd>↑</kbd><kbd>↓</kbd> or <kbd>j</kbd>/<kbd>k</kbd> a line, <kbd>Space</kbd>/<kbd>f</kbd> and <kbd>b</kbd> a page, <kbd>g</kbd>/<kbd>G</kbd> top / bottom, <kbd>q</kbd> quits. The pager prints no key bar.</span></div>
+            <div class="row"><code>/version</code><span class="d">Show the clawee + claweed build versions (<kbd>Esc</kbd> goes back).</span></div>
+            <div class="row"><code>/restart</code><span class="d">Restart the attached session in place.</span></div>
+            <div class="row"><code>/reconnect</code><span class="d">Force a reconnect now.</span></div>
+            <div class="row"><code>/refresh</code><span class="d">Repaint the remote screen now (alias <code>/redraw</code>).</span></div>
+            <div class="row"><code>/detach</code><span class="d">Drop back to the session picker (the remote session keeps running).</span></div>
+            <div class="row"><code>/lock</code><span class="d">Lock the screen now — <code>/lock [&lt;passphrase&gt;]</code>.</span></div>
+            <div class="row"><code>/passphrase</code><span class="d">Set or clear the lock passphrase (masked entry).</span></div>
+            <div class="row"><code>/quit</code><span class="d">Exit clawee (alias <code>/q</code>).</span></div>
+          </div>
+          <p style="margin-top:18px; color:var(--dim)">
+            Stuck? <code>clawee doctor</code> diagnoses the chain, and <code>clawee status</code> shows
+            exactly where a connection stops.
+          </p>
+        </section>
+
+        <!-- CLI REFERENCE -->
+        <section id="reference">
+          <p class="section-h">Reference</p>
+          <h2>CLI reference</h2>
+          <p>Verbatim help pages for these commands, generated by <code>clawee docs</code> from the binary's own help renderer.</p>
+
+          <h3 id="cli-clawee">clawee</h3>
+          <!-- cli-embed: clawee -->
+<p class="mut"></p>
+<pre class="help">clawee — the Clawee terminal client.
+
+Usage:
+  clawee [&lt;gateway&gt;] [flags]   attach a session (optionally selecting a gateway by name)
+  clawee &lt;command&gt; [flags]
+
+Commands:
+  status                                               alias of doctor (read-only) — probe the chain
+                                                       and report
+  sessions                                             list the daemon&#x27;s pty sessions (--watch
+                                                       streams events)
+                    [--watch]                          stream session events until the daemon closes
+                                                       the stream
+  gateway                                              gateways: interactive switch (bare), plus the
+                                                       scripting verbs (alias: gw)
+    use                                                switch the active gateway (optionally picking
+                                                       the user), then attach
+                    &lt;fp|name&gt; [&lt;user&gt;]
+    list                                               print the burrowee matrix gateways with users
+                                                       + session counts
+    name                                               set the gateway&#x27;s local short-name (&quot;-&quot; or
+                                                       empty clears)
+                    &lt;fp|name&gt; &lt;short&gt;
+    user                                               grow or shrink the gateway&#x27;s OS-user list
+                    add &lt;user&gt;                         add the user to the gateway (and select it)
+                    rm &lt;user&gt;                          remove the user (clears the selection if it
+                                                       pointed there)
+  devices                                              enroll + manage device keys on the gateway
+    list                                               enrolled keys + the numbered pending queue
+                                                       (numbers are approve indices)
+    approve                                            approve a pending knock (bare = the first
+                                                       asking key)
+                    &lt;#&gt;                                the pending knock at that number in the queue
+                    &lt;fp&gt;                               the pending knock with that exact SHA256:
+                                                       fingerprint
+                    [--label &lt;label&gt;]                  label for the enrolled key (single token,
+                                                       [A-Za-z0-9._-]{0,32})
+    revoke                                             drop an enrolled key or a pending knock
+                    &lt;fp&gt;
+  relays                                               rank relays, LAN-first (bare: interactive
+                                                       list; piped: the table)
+    list                                               print the relay table in effective dial order
+    probe                                              probe every relay, then print the table
+    priority                                           move the listed relays to the front of the
+                                                       manual order
+                    &lt;id…&gt;
+    skip                                               never auto-dial &lt;id&gt; (at least one relay must
+                                                       stay enabled)
+                    &lt;id&gt;
+
+Attach flags (bare invocation — no subcommand):
+    use                                                prefer &lt;id&gt; (pin to the front, ahead of
+                                                       LAN-auto)
+                    &lt;id&gt;
+    auto                                               clear the pin — back to LAN-auto order
+                                                       (re-probes)
+    gateway                                            show gateways, or switch the active gateway
+                                                       (alias: gw)
+                    [&lt;id&gt;]
+  doctor                                               diagnose the local setup; --fix repairs it
+                    [--fix]                            repair failed checks that clawee owns
+                                                       (consent-prompted)
+                    [--yes]                            skip consent prompts (unattended --fix)
+  update                                               self-update from release.clawee.org (skips
+                                                       when current)
+                    [--auto]                           install the update, unattended
+                    [--dry]                            print the update plan only, then exit
+                    [--force]                          reinstall even when already on the latest
+                                                       version
+  lock-passphrase                                      set the idle-lock passphrase in the local
+                                                       config
+  docs                                                 print the full CLI reference as markdown
+                                                       (docs sites, AI agents)
+  version                                              print the clawee version (also --version)
+                    [-i &lt;key&gt;]                         private key file (default: ssh-agent, then
+                                                       ~/.clawee/id_ed25519)
+                    [--reconnect-timeout &lt;deadline&gt;]   per-attempt reconnect deadline (default:
+                                                       config, then 5s)
+                    [-s &lt;sid&gt;]                         attach the remote session with this sid
+                                                       directly
+                    [--socket &lt;path&gt;]                  transport daemon socket path (default:
+                                                       $BURROWEE_TRANSPORT_SOCK, then config)
+                    [--transport &lt;mode&gt;]               transport mode: auto|ws|quic (default auto;
+                                                       empty = daemon default)
+                    [--user &lt;user&gt;]                    gateway OS user to claim for this run
+
+In the session picker:
+  g                open the gateway chooser (only with more than one gateway)
+
+Keys (once attached — keystrokes otherwise pass through to the remote shell):
+  Ctrl+]           open the command composer (type a /command or text; Enter sends)
+  Ctrl+\           lock the screen (idle-lock passphrase to unlock)
+  F5 · Ctrl+[      redraw the remote screen (Ctrl+[ needs kitty-keyboard, e.g. Ghostty)
+
+In the composer:
+  Enter            send the line (text → remote shell; /command → run it)
+  Shift+Enter      insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty)
+  Paste            multi-line pastes stay in the box; a pasted file path uploads
+                   the file; very large text is uploaded as a file too
+  Tab              complete the /command
+  ↑ / ↓            recall command history (older / newer)
+  ← / →            move the cursor (Home/End or Ctrl+A/E = line start/end · Ctrl+Home/End = buffer)
+  Backspace · Del  delete before / after the cursor (Del = fn+Backspace)
+  Ctrl+K · Ctrl+U  kill to end of line · kill to start (Ctrl+Backspace = kill to start)
+  Ctrl+L           kill the whole line
+  Ctrl+C           clear the box (stays open)
+  Esc · Ctrl+]     close the composer · Ctrl+\  lock
+
+Slash commands (in the composer):
+  /upload · /download · /name · /relays · /settings · /history · /version
+  /restart · /reconnect · /refresh · /detach · /lock · /passphrase · /quit
+  /name renames the REMOTE pty; the picker rename (r) renames the local clawee session
+
+Run &#x27;clawee &lt;command&gt; --help&#x27; for a command&#x27;s own page (&#x27;clawee docs&#x27; prints the
+full reference as markdown).</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-sessions">clawee sessions</h3>
+          <!-- cli-embed: clawee sessions -->
+<p class="mut">list the daemon&#x27;s pty sessions (--watch streams events)</p>
+<pre class="help">clawee sessions — list the daemon&#x27;s pty sessions (--watch streams events)
+
+Usage:
+  clawee sessions [flags]
+
+  sessions
+             [--watch]   stream session events until the daemon closes the stream</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-lock-passphrase">clawee lock-passphrase</h3>
+          <!-- cli-embed: clawee lock-passphrase -->
+<p class="mut">set the idle-lock passphrase in the local config</p>
+<pre class="help">clawee lock-passphrase — set the idle-lock passphrase in the local config
+
+Usage:
+  clawee lock-passphrase</pre>
+<!-- /cli-embed -->
+
+          <p style="margin-top:16px">
+            See the full generated references: <a href="/docs/clawee">clawee CLI reference</a> ·
+            <a href="/docs/claweed">claweed CLI reference</a>.
+          </p>
+          <p style="margin-top:26px; color:var(--dim); font-size:13px">
+            <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+                 channel version, which would make this stamp claim a sync it never had. -->
+            Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>

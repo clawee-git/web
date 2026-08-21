@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — gateways &amp; users</title>
+  <meta name="description" content="The multi-user gateway model, the tree chooser, the gateway verbs, and the client-config upgrade note.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — gateways &amp; users">
+  <meta property="og:description" content="The multi-user gateway model, the tree chooser, the gateway verbs, and the client-config upgrade note.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/gateways">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — gateways &amp; users">
+  <meta name="twitter:description" content="The multi-user gateway model, the tree chooser, the gateway verbs, and the client-config upgrade note.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-wide docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways" class="active">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
+      <!-- TOC -->
+      <nav class="toc">
+        <p class="t">Contents</p>
+        <ul>
+          <li><a href="#gateways">Gateways &amp; users</a></li>
+          <li><a href="#config-upgrade">Client config upgrade</a></li>
+          <li><a href="#reference">CLI reference</a></li>
+          <li><a href="#cli-gateway">clawee gateway</a></li>
+          <li><a href="#cli-gateway-use">clawee gateway use</a></li>
+          <li><a href="#cli-gateway-list">clawee gateway list</a></li>
+          <li><a href="#cli-gateway-name">clawee gateway name</a></li>
+          <li><a href="#cli-gateway-user">clawee gateway user</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc">
+        <!-- GATEWAYS -->
+        <section id="gateways">
+          <p class="section-h">Reference</p>
+          <h1>Gateways</h1>
+          <p>
+            Each gateway can hold more than one OS user now — clawee scopes sessions and devices per
+            <b>(gateway, user)</b> pair, not just per gateway. Pick a gateway by short name, fall back to the
+            chooser, or set friendly names; a gateway with no user added yet has nothing to attach as until
+            you add one.
+          </p>
+          <div class="cmds">
+            <div class="row"><code>clawee &lt;name&gt;</code><span class="d">Attach scoped to that gateway, as its currently selected user (matches a short name, the gateway's name, or a fingerprint prefix).</span></div>
+            <div class="row"><code>clawee gateway</code><span class="d">Open the interactive gateway <b>chooser</b> — a tree of gateways with their users listed beneath (piped: list local sessions grouped by gateway, then by user, with live/dead state).</span></div>
+            <div class="row"><code>clawee gateway use &lt;fp|name&gt; [&lt;user&gt;]</code><span class="d">Switch to that gateway — and optionally that user — then attach.</span></div>
+            <div class="row"><code>clawee gateway list</code><span class="d">Table of every paired gateway — <code>GATEWAY · FP · RELAYS · USERS · SESSIONS · DEFAULT</code>.</span></div>
+            <div class="row"><code>clawee gateway name &lt;fp|name&gt; &lt;short&gt;</code><span class="d">Set a friendly short name for a gateway.</span></div>
+            <div class="row"><code>clawee gateway user &lt;fp|name&gt; add|rm &lt;user&gt;</code><span class="d">Add or remove a user known at that gateway (<code>add</code> also selects it).</span></div>
+          </div>
+          <p style="margin-top:16px">
+            <code>gw</code> is a short alias for <code>gateway</code> — <code>clawee gw list</code> and
+            <code>clawee gateway list</code> are the same command.
+          </p>
+          <p style="margin-top:16px">
+            With a single gateway, none of this shows — <code>clawee</code> goes straight to the picker.
+            With more than one, bare <code>clawee</code> uses your last gateway or opens the chooser; press
+            <kbd>g</kbd> in the picker to switch.
+          </p>
+          <p style="margin-top:16px">
+            The chooser's table is three aligned columns — <code>GATEWAY | USER | SESSIONS</code>, plus a
+            <code>LIVE</code> column once a gateway has been probed. Each gateway is at least a 3-line
+            block: its name alone on the first line, then the gateway's <b>full 16-hex fingerprint</b>
+            sharing a line with its first user, further users indented beneath, and a selectable dim
+            <code>+ add user</code> row closing every gateway (<kbd>Enter</kbd> on it does the same thing
+            as <kbd>u</kbd>). The pick is a <b>user</b>, not a gateway:
+          </p>
+          <pre style="margin:10px 0 0"><span class="mut">    GATEWAY               USER    SESSIONS  LIVE</span>
+<span class="p">▸</span>   workshop
+    a1b2c3d4e5f6a7b8      alice   2         1/2
+                          bob     0         —
+                          <span class="mut">+ add user</span>
+    10.0.0.4              <span class="mut">+ add user</span></pre>
+          <p style="margin-top:16px">Keys in the chooser:</p>
+          <div class="cmds">
+            <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>Enter</kbd></code><span class="d">Move over the tree (a gateway header, then its users indented beneath) · pick a user row to attach as that (gateway, user).</span></div>
+            <div class="row"><code><kbd>l</kbd></code><span class="d">Drill into the selected row's gateway <b>relays</b> and pin one (<kbd>Enter</kbd> picks, <kbd>q</kbd> goes back).</span></div>
+            <div class="row"><code><kbd>d</kbd></code><span class="d">Open the <b>devices</b> view for the selected user — <kbd>Enter</kbd> approves a pending key, <kbd>x</kbd> revokes.</span></div>
+            <div class="row"><code><kbd>r</kbd></code><span class="d">Set the gateway's short <b>name</b>.</span></div>
+            <div class="row"><code><kbd>u</kbd></code><span class="d"><b>Add a user</b> to the selected gateway (also the <code>+ add user</code> row's action). A gateway with none has nothing but that row and must have one added before it can be used.</span></div>
+            <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Back, without switching.</span></div>
+          </div>
+          <p style="margin-top:16px; color:var(--dim)">
+            The bar itself has three variants: in the picker's own chooser it reads <code>… · u user · q back</code>;
+            reached bare (a countdown present but not armed) it's the same bar with <code>q quit</code>; while a
+            launch countdown is <b>armed</b>, <code>u user</code> is dropped to make room for the countdown label —
+            <kbd>u</kbd> still adds a user, it's just not named on that bar.
+          </p>
+        </section>
+
+        <!-- CLIENT CONFIG UPGRADE -->
+        <section id="config-upgrade">
+          <p class="section-h">Reference</p>
+          <h2>Client config upgrade</h2>
+          <div class="callout">
+            <strong>Upgrading is one-way.</strong> Once a v0.2.x <code>clawee</code> writes <code>config.json</code>
+            or a session's <code>meta.json</code> in the multi-user schema, an <em>older</em> clawee binary
+            <b>refuses</b> the file outright rather than silently misreading it — there is no downgrade path.
+            Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id
+            lives in the system config root (moved there by the v0.2.0 migration ladder) and is an
+            auth-challenge input: a regenerated value silently refuses every already-enrolled device.
+            <code>claweed</code> never generates one on its own — only the installer's migration adopts it —
+            so treat that file as load-bearing, not disposable.
+          </div>
+        </section>
+
+        <!-- CLI REFERENCE -->
+        <section id="reference">
+          <p class="section-h">Reference</p>
+          <h2>CLI reference</h2>
+          <p>Verbatim help pages for the <code>gateway</code> verbs, generated by <code>clawee docs</code> from the binary's own help renderer.</p>
+
+          <h3 id="cli-gateway">clawee gateway</h3>
+          <!-- cli-embed: clawee gateway -->
+<p class="mut">gateways: interactive switch (bare), plus the scripting verbs (alias: gw)</p>
+<pre class="help">clawee gateway — gateways: interactive switch (bare), plus the scripting verbs (alias: gw)
+
+Usage:
+  clawee gateway [&lt;command&gt;]
+
+Commands:
+  use                         switch the active gateway (optionally picking the user), then attach
+         &lt;fp|name&gt; [&lt;user&gt;]
+  list                        print the burrowee matrix gateways with users + session counts
+  name                        set the gateway&#x27;s local short-name (&quot;-&quot; or empty clears)
+         &lt;fp|name&gt; &lt;short&gt;
+  user                        grow or shrink the gateway&#x27;s OS-user list
+         add &lt;user&gt;           add the user to the gateway (and select it)
+         rm &lt;user&gt;            remove the user (clears the selection if it pointed there)
+
+Bare `clawee gateway` opens the interactive switch modal on a terminal, and
+prints the per-gateway session grouping when piped.</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-gateway-use">clawee gateway use</h3>
+          <!-- cli-embed: clawee gateway use -->
+<p class="mut">switch the active gateway (optionally picking the user), then attach</p>
+<pre class="help">clawee gateway use — switch the active gateway (optionally picking the user), then attach
+
+Usage:
+  clawee gateway use &lt;fp|name&gt; [&lt;user&gt;]
+
+  use
+        &lt;fp|name&gt; [&lt;user&gt;]</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-gateway-list">clawee gateway list</h3>
+          <!-- cli-embed: clawee gateway list -->
+<p class="mut">print the burrowee matrix gateways with users + session counts</p>
+<pre class="help">clawee gateway list — print the burrowee matrix gateways with users + session counts
+
+Usage:
+  clawee gateway list</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-gateway-name">clawee gateway name</h3>
+          <!-- cli-embed: clawee gateway name -->
+<p class="mut">set the gateway&#x27;s local short-name (&quot;-&quot; or empty clears)</p>
+<pre class="help">clawee gateway name — set the gateway&#x27;s local short-name (&quot;-&quot; or empty clears)
+
+Usage:
+  clawee gateway name &lt;fp|name&gt; &lt;short&gt;
+
+  name
+         &lt;fp|name&gt; &lt;short&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-gateway-user">clawee gateway user</h3>
+          <!-- cli-embed: clawee gateway user -->
+<p class="mut">grow or shrink the gateway&#x27;s OS-user list</p>
+<pre class="help">clawee gateway user — grow or shrink the gateway&#x27;s OS-user list
+
+Usage:
+  clawee gateway user &lt;fp|name&gt; add|rm &lt;user&gt;
+
+  user
+         add &lt;user&gt;   add the user to the gateway (and select it)
+         rm &lt;user&gt;    remove the user (clears the selection if it pointed there)</pre>
+<!-- /cli-embed -->
+
+          <p style="margin-top:16px">
+            See the full generated references: <a href="/docs/clawee">clawee CLI reference</a> ·
+            <a href="/docs/claweed">claweed CLI reference</a>.
+          </p>
+          <p style="margin-top:26px; color:var(--dim); font-size:13px">
+            <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+                 channel version, which would make this stamp claim a sync it never had. -->
+            Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>
