@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="../../style.css?v=6">
+  <link rel="stylesheet" href="../../style.css?v=7">
   <meta property="og:title" content="clawee — CLI reference">
   <meta property="og:description" content="The full clawee CLI reference, generated verbatim from the binary's own help renderer.">
   <meta property="og:type" content="website">
@@ -36,7 +36,20 @@
     </div>
   </header>
 
-  <main class="wrap help-layout">
+  <main class="wrap docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee" class="active">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
     <!-- TOC -->
     <nav class="toc">
       <p class="t">Contents</p>
@@ -499,6 +512,7 @@ Usage:
   clawee version</pre>
       </section>
 
+    </div>
     </div>
   </main>
 

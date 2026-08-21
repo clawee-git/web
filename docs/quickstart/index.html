@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — quick start</title>
+  <meta name="description" content="Fresh machine to a running clawee session: requirements, install, pair a device, and attach.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — quick start">
+  <meta property="og:description" content="Fresh machine to a running clawee session: requirements, install, pair a device, and attach.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/quickstart">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — quick start">
+  <meta name="twitter:description" content="Fresh machine to a running clawee session: requirements, install, pair a device, and attach.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart" class="active">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="doc">
+      <!-- REQUIREMENTS -->
+      <section id="requirements">
+        <p class="section-h">Before you start</p>
+        <h1>Requirements</h1>
+        <p>
+          clawee is a <strong>client</strong> — it runs on top of
+          <a href="https://burrowee.com" target="_blank" rel="noopener"><strong>burrowee</strong></a>, the transport that carries
+          your connection to the remote box. You need two things:
+        </p>
+        <ul class="tight">
+          <li><strong>burrowee installed</strong> — get it at <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee.com</a>. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).</li>
+          <li><strong>a paired gateway</strong> — your device must be bootstrapped against at least one burrowee gateway (see <a href="#pairing">pairing</a> below). Without a gateway binding there's no route, and clawee will tell you so.</li>
+        </ul>
+        <p>Supported clients: macOS and Linux. A box that <em>hosts</em> sessions also runs <code>claweed</code> (the session broker).</p>
+      </section>
+
+      <!-- INSTALL / PAIR / ATTACH -->
+      <section id="install">
+        <p class="section-h">Setup</p>
+        <h2>Get running</h2>
+        <p>
+          Two components, each <strong>installed</strong> with a one-liner (fetched over TLS and signature-verified
+          from <code>release.clawee.org</code>). On a fresh setup, install the <strong>daemon</strong> on each box
+          that hosts sessions first, then the <strong>client</strong> on the machines you drive them from.
+        </p>
+        <ol class="steps">
+          <li>
+            <span class="st">Install the daemon — boxes that host sessions</span>
+            <div class="cmd" style="margin-bottom:10px; max-width:660px">
+              <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/claweed/install.sh | sh</code>
+              <button class="copy" data-copy="curl -fsSL https://release.clawee.org/claweed/install.sh | sh">copy</button>
+            </div>
+            <pre><span class="p">$</span> claweed setup            <span class="mut"># first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)</span></pre>
+          </li>
+          <li>
+            <span class="st">Install the client — your laptop / workstation</span>
+            <div class="cmd" style="margin-bottom:10px; max-width:660px">
+              <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/clawee/install.sh | sh</code>
+              <button class="copy" data-copy="curl -fsSL https://release.clawee.org/clawee/install.sh | sh">copy</button>
+            </div>
+          </li>
+          <li>
+            <span class="st">Bind to a gateway — the route</span>
+            <p>In your <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> console, mint a one-time <strong>blob</strong> + <strong>PIN</strong>, then on the client:</p>
+            <pre><span class="p">$</span> burrowee bootstrap &lt;blob&gt; &lt;pin&gt;</pre>
+            <p>This is transport only — it carries no trust on its own.</p>
+          </li>
+          <li id="pairing">
+            <span class="st">Pair the device — trust</span>
+            <p>
+              <code>claweed setup</code> already bootstrapped <em>your own</em> login from
+              <code>~/.ssh/authorized_keys</code> — if this is the box you ran it on, that device is already
+              trusted and you can skip ahead to <a href="#attach">attach</a>. Enrolling an <em>additional</em>
+              device is two steps: knock, then approve.
+            </p>
+            <p>On the new device, run <code>clawee</code> — an untrusted key can't open a session, so the picker opens as a <strong>pairing form</strong> instead. Press <kbd>Enter</kbd> on the <code>pair</code> row to send the knock:</p>
+            <pre>gateway   workshop (SHA256:a1b2c3d4)
+status    not paired
+
+<span class="mut">⏎ pair · r re-check · l relays · q quit</span></pre>
+            <p>From a device that's already enrolled, approve the pending fingerprint:</p>
+            <pre><span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index</span></pre>
+            <p>The new device's form re-checks itself every 10 seconds and drops into the ordinary picker once the key is trusted.</p>
+          </li>
+          <li id="attach">
+            <span class="st">Attach</span>
+            <p>Back on the client, open the picker and attach:</p>
+            <pre><span class="p">$</span> clawee</pre>
+          </li>
+        </ol>
+      </section>
+
+      <!-- WHERE NEXT -->
+      <section id="next">
+        <p class="section-h">Where next</p>
+        <h2>Where next</h2>
+        <p>Once you're attached, here's the rest of the surface:</p>
+        <div class="cmds">
+          <div class="row"><a href="/docs/sessions">Sessions &amp; keys</a><span class="d">Attach flags, the session picker, views &amp; keys, locking, the composer, slash commands.</span></div>
+          <div class="row"><a href="/docs/gateways">Gateways &amp; users</a><span class="d">The multi-user gateway model, the tree chooser, and the <code>gateway</code> verbs.</span></div>
+          <div class="row"><a href="/docs/relays">Relays</a><span class="d">Relay preference order, LAN auto-rank, and the <code>relays</code> verbs.</span></div>
+          <div class="row"><a href="/docs/devices">Devices &amp; pairing</a><span class="d">The full trust model — every pairing-form state, knock/approve, revocation.</span></div>
+          <div class="row"><a href="/docs/daemon">The daemon</a><span class="d"><code>claweed</code> operations — setup, doctor, update, tenants, troubleshooting.</span></div>
+          <div class="row"><a href="/docs/clawee">clawee CLI reference</a><span class="d">Every <code>clawee</code> verb, generated verbatim from the binary's own help renderer.</span></div>
+          <div class="row"><a href="/docs/claweed">claweed CLI reference</a><span class="d">Every <code>claweed</code> verb, generated verbatim from the binary's own help renderer.</span></div>
+        </div>
+        <p style="margin-top:26px; color:var(--dim); font-size:13px">
+          <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+               channel version, which would make this stamp claim a sync it never had. -->
+          Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>

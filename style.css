@@ -377,3 +377,14 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 30px 0 44
   .reveal.d4 { animation-delay: .29s; }
   @keyframes rise { to { opacity: 1; transform: none; } }
 }
+
+/* docs multi-page chrome */
+.docs-layout { display: grid; grid-template-columns: 200px minmax(0,1fr); gap: 34px; align-items: start; }
+.docs-side { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.docs-side a { color: var(--muted); padding: 5px 10px; border-radius: 6px; text-decoration: none; }
+.docs-side a:hover { color: var(--ink); }
+.docs-side a.active { color: var(--accent); background: var(--bg-bar); }
+@media (max-width: 860px) {
+  .docs-layout { grid-template-columns: 1fr; }
+  .docs-side { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px 10px; }
+}
