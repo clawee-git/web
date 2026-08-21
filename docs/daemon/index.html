@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — the daemon</title>
+  <meta name="description" content="claweed daemon operations: setup, doctor/status, update, the upgrade.sh escape hatch, the service unit, tenant management, and troubleshooting.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — the daemon">
+  <meta property="og:description" content="claweed daemon operations: setup, doctor/status, update, the upgrade.sh escape hatch, the service unit, tenant management, and troubleshooting.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/daemon">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — the daemon">
+  <meta name="twitter:description" content="claweed daemon operations: setup, doctor/status, update, the upgrade.sh escape hatch, the service unit, tenant management, and troubleshooting.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-wide docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon" class="active">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
+      <!-- TOC -->
+      <nav class="toc">
+        <p class="t">Contents</p>
+        <ul>
+          <li><a href="#setup">Setting up the daemon</a></li>
+          <li><a href="#doctor">Doctor &amp; status</a></li>
+          <li><a href="#update">Update</a></li>
+          <li><a href="#service">Service unit</a></li>
+          <li><a href="#tenant">Tenant management</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#reference">CLI reference</a></li>
+          <li><a href="#cli-setup">claweed setup</a></li>
+          <li><a href="#cli-doctor">claweed doctor</a></li>
+          <li><a href="#cli-status">claweed status</a></li>
+          <li><a href="#cli-update">claweed update</a></li>
+          <li><a href="#cli-service-print">claweed service print</a></li>
+          <li><a href="#cli-tenant">claweed tenant</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc">
+        <!-- SETUP -->
+        <section id="setup">
+          <p class="section-h">Setup</p>
+          <h1>Setting up the daemon</h1>
+          <p>
+            <code>claweed</code> is the session broker — it runs on every box that <em>hosts</em> sessions.
+            Install it, then run <code>claweed setup</code> once: a single first-run pass that repairs the
+            local install and bootstraps <em>your own</em> login as the box's first trusted tenant.
+          </p>
+          <div class="cmd" style="margin-bottom:10px; max-width:660px">
+            <code><span class="p">$ </span>curl -fsSL https://release.clawee.org/claweed/install.sh | sh</code>
+            <button class="copy" data-copy="curl -fsSL https://release.clawee.org/claweed/install.sh | sh">copy</button>
+          </div>
+          <pre><span class="p">$</span> claweed setup            <span class="mut"># first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)</span></pre>
+          <p style="margin-top:16px">
+            Under the hood that's two steps run back to back: <code>doctor --fix</code> repairs whatever it
+            can about the local install, then <code>claweed</code> reads the <em>invoking</em> user's own
+            <code>~/.ssh/authorized_keys</code> and offers to enroll each key it finds as that user's first
+            trusted device. Nothing is written without consent, and running it again is a no-op once the
+            tenant already exists.
+          </p>
+          <p style="margin-top:16px; color:var(--dim)">
+            Enrolling a <em>different</em> device's key — not this host's own login — is a separate step:
+            see <a href="/docs/devices#pairing">Devices &amp; pairing</a>.
+          </p>
+        </section>
+
+        <!-- DOCTOR / STATUS -->
+        <section id="doctor">
+          <p class="section-h">Health checks</p>
+          <h2>Doctor &amp; status</h2>
+          <p>
+            Both sides speak the same two verbs. On the host, <code>claweed doctor [--fix] [--yes]</code>
+            diagnoses the deployment and repairs service-user-owned bits (<code>--yes</code> skips consent
+            prompts); <code>claweed status</code> is its read-only alias — same report, no <code>--fix</code>.
+          </p>
+          <p style="margin-top:16px">
+            On the client, <code>clawee doctor [--fix] [--yes]</code> diagnoses the local setup and always
+            prints the clawee + claweed versions — even when nothing connects; <code>clawee status</code>
+            probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where
+            a connection stops.
+          </p>
+          <p style="margin-top:16px; color:var(--dim)">
+            <code>claweed doctor</code>, run on the session host, reports the installed daemon version
+            alongside the version actually running — if they differ, restart the service.
+          </p>
+        </section>
+
+        <!-- UPDATE -->
+        <section id="update">
+          <p class="section-h">Maintenance</p>
+          <h2>Update</h2>
+          <p>Both components self-update in place from the signed release channel:</p>
+          <pre><span class="p">$</span> clawee update             <span class="mut"># shows the version gap; skips if current</span>
+<span class="p">$</span> clawee update --auto      <span class="mut"># install the update, unattended</span>
+<span class="p">$</span> clawee update --dry       <span class="mut"># report only</span>
+<span class="p">$</span> clawee update --force     <span class="mut"># reinstall the latest regardless</span>
+<span class="p">$</span> claweed update            <span class="mut"># same, for the daemon</span>
+<span class="p">$</span> claweed update --auto     <span class="mut"># apply unattended; restarts the service only if changed</span>
+<span class="p">$</span> claweed setup             <span class="mut"># first run: doctor --fix, then bootstrap YOUR tenant keys (see Setup)</span></pre>
+          <div class="callout" style="margin-top:16px">
+            <strong>upgrade.sh is not how you upgrade — install.sh is.</strong> It's a forcing entry point
+            for same-semver re-cuts the normal update ladder gate can't see (the version number didn't
+            change, so <code>update</code> sees nothing to do):
+            <pre style="margin:10px 0 0"><span class="p">$</span> curl -fsSL https://release.clawee.org/claweed/upgrade.sh | sh -s -- &lt;version&gt;</pre>
+          </div>
+        </section>
+
+        <!-- SERVICE -->
+        <section id="service">
+          <p class="section-h">Operations</p>
+          <h2>Service unit</h2>
+          <p>
+            The daemon installs itself as a managed boot unit — a launchd <code>.plist</code> on macOS, a
+            systemd <code>.service</code> on Linux. <code>claweed service print</code> renders that unit to
+            stdout, given the same paths and run-as identity the installer already resolved — useful for
+            inspecting what got installed, or for a manual install on a box the installer can't reach
+            directly.
+          </p>
+        </section>
+
+        <!-- TENANT -->
+        <section id="tenant">
+          <p class="section-h">Operations</p>
+          <h2>Tenant management</h2>
+          <p>
+            <code>claweed tenant</code> manages <em>your own</em> tenant enrollment — the same enrollment
+            <code>claweed setup</code> bootstraps automatically from <code>~/.ssh/authorized_keys</code> on
+            first run, and the same one <code>claweed auth</code> / <code>claweed tenant add</code> sugar
+            over for a second device (see <a href="/docs/devices#pairing">Devices &amp; pairing</a>).
+          </p>
+          <div class="callout" style="margin-top:16px">
+            <strong>Upgrading is one-way.</strong> Once a v0.2.x <code>clawee</code> writes <code>config.json</code>
+            or a session's <code>meta.json</code> in the multi-user schema, an <em>older</em> clawee binary
+            <b>refuses</b> the file outright rather than silently misreading it — there is no downgrade path.
+            Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id
+            lives in the system config root (moved there by the v0.2.0 migration ladder) and is an
+            auth-challenge input: a regenerated value silently refuses every already-enrolled device.
+            <code>claweed</code> never generates one on its own — only the installer's migration adopts it —
+            so treat that file as load-bearing, not disposable.
+          </div>
+        </section>
+
+        <!-- TROUBLESHOOTING -->
+        <section id="troubleshooting">
+          <p class="section-h">Reference</p>
+          <h2>Troubleshooting</h2>
+          <p>Quick diagnostic rows, condensed from <code>doctor</code>/<code>status</code> on both sides:</p>
+          <div class="cmds">
+            <div class="row"><code>clawee doctor [--fix] [--yes]</code><span class="d">Diagnoses the local setup and repairs what it can, and always prints the clawee + claweed versions — even when nothing connects.</span></div>
+            <div class="row"><code>claweed doctor</code><span class="d">Run on the session host — reports the installed daemon version alongside the version actually running; if they differ, restart the service.</span></div>
+            <div class="row"><code>clawee status</code> / <code>claweed status</code><span class="d">Read-only aliases of <code>doctor</code> — same report, no <code>--fix</code>.</span></div>
+            <div class="row"><code>clawee status</code><span class="d">Probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.</span></div>
+            <div class="row"><code>claweed setup</code><span class="d">Bootstraps a first-time host: <code>doctor --fix</code> plus consent-gated tenant enrollment from the invoking user's own <code>~/.ssh/authorized_keys</code>.</span></div>
+          </div>
+        </section>
+
+        <!-- CLI REFERENCE -->
+        <section id="reference">
+          <p class="section-h">Reference</p>
+          <h2>CLI reference</h2>
+          <p>Verbatim help pages for the daemon-operations verbs, generated by <code>claweed docs</code> from the binary's own help renderer.</p>
+
+          <h3 id="cli-setup">claweed setup</h3>
+          <!-- cli-embed: claweed setup -->
+<p class="mut">first-time setup for the invoking user — doctor --fix, then bootstrap YOUR tenant keys</p>
+<pre class="help">claweed setup — first-time setup for the invoking user — doctor --fix, then bootstrap YOUR tenant keys
+
+Usage:
+  claweed setup</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-doctor">claweed doctor</h3>
+          <!-- cli-embed: claweed doctor -->
+<p class="mut">diagnose the deployment; --fix repairs service-user-owned bits</p>
+<pre class="help">claweed doctor — diagnose the deployment; --fix repairs service-user-owned bits
+
+Usage:
+  claweed doctor [flags]
+
+  doctor
+           [--allowlist &lt;path&gt;]              spawn-allow uid list path
+           [--data-dir &lt;dir&gt;]                data dir (default: installed boot unit)
+           [--fix]                           repair failed checks (asks consent)
+           [--register-socket &lt;path&gt;]        gateway register socket path (default: installed boot
+                                             unit)
+           [--service-home &lt;dir&gt;]            service home dir (see --service-uid)
+           [--service-uid &lt;uid&gt;]             service uid (default: the --data-dir owner; set by a
+                                             root re-read)
+           [--service-user &lt;user&gt;]           service user (see --service-uid)
+           [--sessions-verdict &lt;verdict&gt;]    relayed sessions verdict (root re-read; display only)
+           [--socket &lt;path&gt;]                 dev unix socket path (default: installed boot unit)
+           [--system-uid-allowlist &lt;path&gt;]   system-uid opt-in path
+           [--yes]                           skip consent prompts (unattended --fix)</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-status">claweed status</h3>
+          <!-- cli-embed: claweed status -->
+<p class="mut">alias of doctor (read-only) — same report, no --fix</p>
+<pre class="help">claweed status — alias of doctor (read-only) — same report, no --fix
+
+Usage:
+  claweed status [flags]
+
+  status
+           [--data-dir &lt;dir&gt;]           service data dir (default: installed boot unit, then the
+                                        euid default (system root as root, ~/.clawee/data
+                                        otherwise))
+           [--register-socket &lt;path&gt;]   gateway register socket path (default: installed boot unit)
+           [--socket &lt;path&gt;]            dev unix socket path (default: installed boot unit)</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-update">claweed update</h3>
+          <!-- cli-embed: claweed update -->
+<p class="mut">update claweed from release.clawee.org</p>
+<pre class="help">claweed update — update claweed from release.clawee.org
+
+Usage:
+  claweed update [flags]
+
+  update
+           [--auto]    apply unattended; restart only if changed
+           [--dry]     print the update plan only, then exit
+           [--force]   reinstall everything (binary + spawn policy + boot-unit) + restart</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-service-print">claweed service print</h3>
+          <!-- cli-embed: claweed service print -->
+<p class="mut">render the boot unit — a launchd .plist / systemd .service — to stdout</p>
+<pre class="help">claweed service print — render the boot unit — a launchd .plist / systemd .service — to stdout
+
+Usage:
+  claweed service print [flags]
+
+  print
+          [--claweed &lt;path&gt;]           claweed binary path (required)
+          [--group &lt;group&gt;]            run-as group (optional)
+          [--home &lt;dir&gt;]               service user&#x27;s home dir — the unit&#x27;s HOME (always required)
+          [--kind &lt;kind&gt;]              unit kind: launchd | systemd (required)
+          [--log &lt;path&gt;]               launchd stderr/stdout log path (optional)
+          [--register-socket &lt;path&gt;]   claweed --register-socket path (production)
+          [--root-scheme]              root daemon, no run-as user (excludes --user/--group; --home
+                                       still required)
+          [--socket &lt;path&gt;]            claweed --socket path (dev)
+          [--user &lt;user&gt;]              run-as user (required unless --root-scheme)</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-tenant">claweed tenant</h3>
+          <!-- cli-embed: claweed tenant -->
+<p class="mut">manage YOUR OWN tenant enrollment</p>
+<pre class="help">claweed tenant — manage YOUR OWN tenant enrollment
+
+Usage:
+  claweed tenant &lt;command&gt;
+
+Commands:
+  add                        enroll a trust key for YOURSELF
+        &lt;pubkey&gt;             the public key line itself
+        @&lt;file&gt;              read the public key from the named file
+        [--data-dir &lt;dir&gt;]   claweed data dir (required; `claweed auth` resolves a default)</pre>
+<!-- /cli-embed -->
+
+          <p style="margin-top:16px">
+            See the full generated references: <a href="/docs/clawee">clawee CLI reference</a> ·
+            <a href="/docs/claweed">claweed CLI reference</a>.
+          </p>
+          <p style="margin-top:26px; color:var(--dim); font-size:13px">
+            <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+                 channel version, which would make this stamp claim a sync it never had. -->
+            Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>
