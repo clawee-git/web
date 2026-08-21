@@ -62,10 +62,11 @@
           <div class="term-body">
 <div class="ln"><span class="p">❯</span> <span class="c">clawee</span></div>
 <div class="picker">
-  <div class="ph"><span>clawee — work (d4e5f6…)</span><span class="gw">g · switch gw</span></div>
-  <div class="pr"><span class="sel">▸ deploy</span><span class="st-live">● live</span></div>
-  <div class="pr"><span class="name">&nbsp;&nbsp;api</span><span class="st-dead">○ dead</span></div>
-  <div class="pr"><span class="name dim">+ new session</span></div>
+  <div class="ph"><span>GATEWAY</span><span>USER</span><span class="gw">SESSIONS</span></div>
+  <div class="pr"><span class="name">work</span></div>
+  <div class="pr"><span class="name dim">&nbsp;&nbsp;a1b2c3d4e5f60718</span><span class="sel">▸ jc</span><span class="st-live">2</span></div>
+  <div class="pr"><span class="name dim">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="name">ops</span><span class="st-dead">0</span></div>
+  <div class="pr"><span class="name dim">+ add user</span></div>
 </div>
 <div class="ln">&nbsp;</div>
 <div class="ln"><span class="p">❯</span> <span class="c">clawee status</span></div>
@@ -81,7 +82,7 @@
     <section id="install">
       <div class="wrap">
         <p class="section-h">Install</p>
-        <h2>One command. Signed installer. <span class="ver">v0.1.91</span></h2>
+        <h2>One command. Signed installer. <span class="ver">v0.2.12</span></h2>
         <p style="max-width:62ch">
           The installer is fetched over TLS and verified before anything runs.
           clawee needs <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> and a paired gateway —
@@ -128,12 +129,12 @@
           <div class="card">
             <span class="k">resumable</span>
             <h3>Sessions that stay put</h3>
-            <p>Detach, lose Wi-Fi, reboot your laptop — the remote shell keeps running. <code>clawee -r</code> resumes the last one.</p>
+            <p>Detach, lose Wi-Fi, reboot your laptop — the remote shell keeps running on the daemon. Run <code>clawee</code> and pick it back up in the picker.</p>
           </div>
           <div class="card">
             <span class="k">multi-gateway</span>
             <h3>Many machines, one client</h3>
-            <p>Pair several gateways and switch between them — <code>clawee work</code>, or press <kbd>g</kbd> in the picker. Sessions stay grouped per gateway.</p>
+            <p>Every gateway holds an ordered list of users. Pairing, sessions, devices scope per <code>(gateway, user)</code> — press <kbd>g</kbd> for the tree chooser; no default user, just the one you pick.</p>
           </div>
           <div class="card">
             <span class="k">secure</span>
