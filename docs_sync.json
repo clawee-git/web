@@ -6,13 +6,19 @@
       "view": "top-level help",
       "src": "cli:cmd/clawee/usage.go buildUsage (generated from help.go helpTree)",
       "anchor": "/docs#commands",
-      "note": "TOP-LEVEL page only. The FULL surface — every level, every flag — is the GENERATED cli:docs/cli-help.md (`clawee docs`, build-gated by TestDocsFileIsInSync); sync command tables from that file, never from this page alone."
+      "note": "buildUsage now renders the FULL command tree (every sub-verb, every flag — operator ruling 2026-08-21), not just the first level; it walks the same helpTree that cli:cmd/clawee/docs.go renderDocs walks. The GENERATED cli:docs/cli-help.md (`clawee docs`, build-gated by TestDocsFileIsInSync) additionally fences each verb's verbatim --help page beneath the tree; sync command tables from that file, never from this page alone."
     },
     {
       "view": "relays verbs",
-      "src": "cli:cmd/clawee/help.go helpTree (relays node) — rendered in cli:docs/cli-help.md",
+      "src": "cli:cmd/clawee/docs.go renderDocs (#relays marker; auto/gateway appear only at this level)",
       "anchor": "/docs#relays",
       "note": "The full verb set (auto/gateway included). The hand-written relaysUsage string is GONE (2026-08-20 cli help port); `clawee relays --help` and the generated reference are the surface."
+    },
+    {
+      "view": "top-level Commands table",
+      "src": "cli:cmd/clawee/docs.go:46 renderDocs",
+      "anchor": "/docs#commands",
+      "note": "top-level Commands table publishes from the generated reference (cli:docs/cli-help.md via `clawee docs`), byte-identical to the binary's own --help by construction."
     },
     {
       "view": "session picker",
@@ -24,12 +30,13 @@
       "view": "pairing form",
       "src": "cli:internal/picker/pair_header.go pairFormHint",
       "anchor": "/docs#pairing",
-      "note": "One bar per state: pair / re-check / continue."
+      "note": "Five states now (PairFormPair / PairFormWait / PairFormContinue / PairFormUser / PairFormNoUser): pair / re-check / continue / set-user-with-recheck / set-user-without-recheck. PairFormNoUser drops `r` deliberately — a re-check with no tenant selected is a hello claiming nobody, which the gateway can only refuse."
     },
     {
       "view": "gateway chooser",
       "src": "cli:cmd/clawee/gateway_modal.go gwHint",
-      "anchor": "/docs#gateways"
+      "anchor": "/docs#gateways",
+      "note": "Three bars: gwHint (in-picker, 'q back'), gwHintQuit (entry screen, countdown not armed, 'q quit'), gwHintEntryMode (entry screen, countdown armed — drops 'u user' to hold the 80-column budget; `u` still works while armed, just isn't listed)."
     },
     {
       "view": "relay list — bar, ⏎ verbs, columns",
@@ -74,6 +81,19 @@
   ],
 
   "syncs": [
+    {
+      "date": "2026-08-21",
+      "scope": "released v0.2.x catch-up: help port (help verb removed, docs verb, level-by-level --help), claweed setup + tenant add, chooser tree re-layout, interrupted sessions, unlock/refresh repaint, one-way upgrade callout; published /docs/clawee + /docs/claweed generated references",
+      "released": {
+        "clawee": "v0.2.12",
+        "claweed": "v0.2.4"
+      },
+      "repos": {
+        "clawee-git/cli": "c995a53",
+        "clawee-git/daemon": "64a2dfc"
+      },
+      "notes": "This pass re-verifies the 2026-08-20 dev-synced entry (5ddcaa9/f64b907) against the RELEASED surface (c995a53/64a2dfc) and bumps the 'Docs synced' stamp that entry deliberately withheld — the multi-user surface it documented has now shipped. Also new this pass: the two published generated-reference pages /docs/clawee + /docs/claweed (HTML + raw cli-help.md copies, byte-identical to cli c995a53 / daemon 64a2dfc). Verdicts recorded: (1) relay-list `G` key — confirmed REMOVED in released code (cmd/clawee/relays_ui.go, no live handler, explicit 'do not re-add' comment beneath the switch); however the DOCS-SYNC comment ABOVE that same switch is stale and still lists 'G switches gateway' — filed as a cli-repo comment bug, not a docs bug; the page correctly stays q/Esc→chooser and does not re-document G. (2) `-r` attach flag — absent from the released generated reference's flag list; removed from #attach and from the home page's resumable-session card, which had mentioned `clawee -r`. (3) no-user pairing hint — the released binary's own hint string is a WORD-ORDER bug, printing `clawee gateway user <fp|name> <user>` (missing the `add` token: cmd/clawee/main.go:407, cmd/clawee/doctor.go:317) versus the canonical `clawee gateway user <fp|name> add <user>` that the actual verb requires; the site documents the canonical, correct form and this is recorded as documented-correctly-on-site, not a docs defect."
+    },
     {
       "date": "2026-08-20",
       "scope": "gateway multi-user: tree picker (gateway + user rows), per-user devices view (pending-first, `devices · <gw> · <user>` title), devices approve by bare/index/fingerprint, and the pairing form's new no-user/user-refused states",

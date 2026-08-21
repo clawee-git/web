@@ -332,4 +332,4 @@ There's also a forcing entry point, `upgrade.sh` — **this is not how you upgra
 
 ---
 
-Docs synced 2026-07-29 against clawee v0.1.102 · claweed v0.1.42.
+Docs synced 2026-08-21 against clawee v0.2.12 · claweed v0.2.4.
