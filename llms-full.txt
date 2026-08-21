@@ -1,116 +1,87 @@
-# clawee — full documentation
+# clawee docs
 
-> A fast, resumable remote-shell client: persistent PTY sessions on your machines, attached from anywhere over the burrowee transport.
+clawee is a **client** that runs on top of [burrowee](https://burrowee.com), the transport that carries your connection to a remote box. Pair a device against a gateway and you get a **resumable** terminal session — persistent on the daemon across disconnects, reboots, and Wi-Fi drops.
 
-clawee is the client; **claweed** is the session broker on the remote box. clawee speaks to your local burrowee daemon, which carries the connection through a relay and gateway to claweed. Sessions survive disconnects, reboots, and network roams — pick one back up exactly where you left it, from any device.
+Find your way:
+
+- **Quick start** — start here: fresh machine to a running session — requirements, install both binaries, pair a device, and attach.
+- **Sessions & keys** — daily use: attach flags, the session picker, views & keys, locking, the composer, and slash commands.
+- **Gateways & users** — multi-user: the multi-user gateway model, the tree chooser, and the `gateway` verbs.
+- **Relays** — transport: relay preference order, LAN auto-rank, and the `relays` verbs.
+- **Devices & pairing** — trust: the full device trust model — pairing-form states, knock/approve, and revocation.
+- **The daemon** — host side: `claweed` operations — setup, doctor, update, the service unit, and tenant management.
+- **CLI reference** — every verb, generated verbatim from each binary's own help renderer: [clawee CLI](https://clawee.org/docs/clawee) · [claweed CLI](https://clawee.org/docs/claweed) (raw markdown: [clawee](https://clawee.org/docs/clawee/cli-help.md) · [claweed](https://clawee.org/docs/claweed/cli-help.md)).
+
+# Quick start
 
 ## Requirements
 
-clawee is a client — it runs on top of **burrowee** (https://burrowee.com), the transport that carries your connection to the remote box. You need two things:
+clawee is a **client** — it runs on top of [burrowee](https://burrowee.com), the transport that carries your connection to the remote box. You need two things:
 
-- **burrowee installed** — get it at https://burrowee.com. clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).
-- **a paired gateway** — your device must be bootstrapped against at least one burrowee gateway. Without a gateway binding there is no route, and clawee will tell you so.
-
-clawee deliberately owns no transport of its own. burrowee handles pairing, gateways, relays, and the encrypted tunnel; clawee focuses on the terminal — sessions, the picker, uploads, the composer.
+- **burrowee installed** — get it at [burrowee.com](https://burrowee.com). clawee talks to the local burrowee daemon over a unix socket and will auto-start it when needed (it never replaces or supervises it).
+- **a paired gateway** — your device must be bootstrapped against at least one burrowee gateway (see pairing below). Without a gateway binding there's no route, and clawee will tell you so.
 
 Supported clients: macOS and Linux. A box that *hosts* sessions also runs `claweed` (the session broker).
 
-## Install
+## Get running
 
-Two components, each installed with a one-liner (fetched over TLS and signature-verified from release.clawee.org) and updated in place with its own `update` command. On a fresh setup, install the daemon on each box that hosts sessions first, then the client on the machines you drive them from.
+Two components, each **installed** with a one-liner (fetched over TLS and signature-verified from `release.clawee.org`). On a fresh setup, install the **daemon** on each box that hosts sessions first, then the **client** on the machines you drive them from.
 
-Daemon — boxes that host sessions:
+1. Install the daemon — boxes that host sessions:
 
-    curl -fsSL https://release.clawee.org/claweed/install.sh | sh
-    claweed setup            # first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)
-    claweed update           # update in place; skips if current
-    claweed update --force   # reinstall the latest regardless
+       $ curl -fsSL https://release.clawee.org/claweed/install.sh | sh
+       $ claweed setup            # first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)
 
-Client — your laptop / workstation:
+2. Install the client — your laptop / workstation:
 
-    curl -fsSL https://release.clawee.org/clawee/install.sh | sh
-    clawee update            # update in place; skips if current
-    clawee update --force    # reinstall the latest regardless
+       $ curl -fsSL https://release.clawee.org/clawee/install.sh | sh
 
-**Upgrading is one-way.** Once a v0.2.x `clawee` writes `config.json` or a session's `meta.json` in the multi-user schema, an *older* clawee binary refuses the file outright rather than silently misreading it — there is no downgrade path. Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id lives in the system config root (moved there by the v0.2.0 migration ladder) and is an auth-challenge input: a regenerated value silently refuses every already-enrolled device. `claweed` never generates one on its own — only the installer's migration adopts it — so treat that file as load-bearing, not disposable.
+3. Bind to a gateway — the route. In your [burrowee](https://burrowee.com) console, mint a one-time **blob** + **PIN**, then on the client:
 
-## Pairing a device
-
-Two things have to line up: a **route** — burrowee binds your device to a gateway — and **trust** — your clawee **device key** is enrolled on the box running `claweed`. clawee and claweed usually live on *different* machines, so the first device is enrolled by hand on the host; extra devices can then be approved remotely.
-
-1. **Bind to a gateway — the route.** In your burrowee console, mint a one-time blob + PIN, then on the client:
-
-       burrowee bootstrap <blob> <pin>
+       $ burrowee bootstrap <blob> <pin>
 
    This is transport only — it carries no trust on its own.
 
-2. **Get your device key.** clawee mints `~/.clawee/id_ed25519` the first time it runs; the private key never leaves the client.
+4. Pair the device — trust. `claweed setup` already bootstrapped *your own* login from `~/.ssh/authorized_keys` — if this is the box you ran it on, that device is already trusted and you can skip ahead to attach. Enrolling an *additional* device is two steps: knock, then approve.
 
-       clawee status                 # generates the key; shows the chain + fingerprint
-       cat ~/.clawee/id_ed25519.pub  # the public key to enroll
+   On the new device, run `clawee` — an untrusted key can't open a session, so the picker opens as a **pairing form** instead. Press Enter on the `pair` row to send the knock:
 
-3. **Send the public key to the host.** Copy that `id_ed25519.pub` line to the box running `claweed` — paste it, `scp` it, however you like. Only the *public* key travels.
+       gateway   workshop (SHA256:a1b2c3d4)
+       status    not paired
+       key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-4. **Enroll it on the host.** On the claweed box, register the key for your tenant — it enrolls against the *invoking* OS user (auth/devices/tenant all act on your own host login; there's no per-call user override). `claweed auth` is sugar over the full verb, `claweed tenant add` — renamed from the old `tenant add-key` spelling, which the released binary now refuses:
+       ⏎ pair · r re-check · l relays · q quit
 
-       claweed auth @id_ed25519.pub        # from a file — sugar over `tenant add`
-       claweed auth "ssh-ed25519 AAAA… "   # or paste the key inline
-       claweed tenant add @id_ed25519.pub --data-dir <dir>   # the full verb — --data-dir is required here
+   From a device that's already enrolled, approve the pending fingerprint:
 
-   Setting up your *own* login on a fresh host? `claweed setup` (see Install) already bootstrapped it from your `~/.ssh/authorized_keys` — this step is for enrolling a different device's key.
+       $ clawee devices approve [<#>|<fp>] [--label <x>]  # bare = first asking, #N = pending index
 
-5. **Connect.** Back on the client, open the picker and attach:
+   The new device's form re-checks itself every 10 seconds and drops into the ordinary picker once the key is trusted.
 
-       clawee
+5. Attach. Back on the client, open the picker and attach:
 
-**Additional devices — pair from the picker.** Once one device is enrolled you don't need host access for the next one. On the new device just run `clawee`: an untrusted key cannot open a session, so the picker opens as a **pairing form** instead — a header naming the gateway, the status, and the device key fingerprint, with one action on the top row.
+       $ clawee
 
-    gateway   workshop (SHA256:a1b2c3d4)
-    status    not paired
-    key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+## Where next
 
-    ⏎ pair · r re-check · l relays · q quit
+Once you're attached, here's the rest of the surface:
 
-1. **Send the request.** Enter on the `pair` row queues a *knock* on the host; the status becomes `waiting for approval` with a running clock. If ssh-agent holds several keys clawee asks which one to enrol — pairing enrols exactly **one** key.
+- [Sessions & keys](https://clawee.org/docs/sessions) — attach flags, the session picker, views & keys, locking, the composer, slash commands.
+- [Gateways & users](https://clawee.org/docs/gateways) — the multi-user gateway model, the tree chooser, and the `gateway` verbs.
+- [Relays](https://clawee.org/docs/relays) — relay preference order, LAN auto-rank, and the `relays` verbs.
+- [Devices & pairing](https://clawee.org/docs/devices) — the full trust model — every pairing-form state, knock/approve, revocation.
+- [The daemon](https://clawee.org/docs/daemon) — `claweed` operations — setup, doctor, update, tenants, troubleshooting.
+- [clawee CLI reference](https://clawee.org/docs/clawee) — every `clawee` verb, generated verbatim from the binary's own help renderer.
+- [claweed CLI reference](https://clawee.org/docs/claweed) — every `claweed` verb, generated verbatim from the binary's own help renderer.
 
-2. **Approve it from an enrolled device** — from the CLI, or in the picker's devices view (`d` on the Local tab: Enter approves the selected pending key, `x` revokes):
-
-       clawee devices                                    # pending knocks + enrolled keys
-       clawee devices approve [<#>|<fp>] [--label <x>]    # bare = first asking, #N = pending index
-       clawee devices revoke <fp>                         # remove a key or drop a knock
-
-3. **Back on the new device.** The form re-checks every 10 seconds and drops into the ordinary picker once the key is trusted. Automatic polling stops after 10 minutes — Enter on the `re-check` row asks again at any time:
-
-       status    waiting for approval …
-
-       ⏎ re-check · l relays · q quit
-
-If the gateway itself cannot be reached the form says `unreachable` and offers `continue` rather than pairing (a knock cannot be queued through a gateway that never answers). `l` opens the relay list from any pairing state — relay choice needs no gateway trust, and a bad relay is the usual reason a gateway looks unreachable:
-
-    status    unreachable
-
-    ⏎ continue · r re-check · l relays · q quit
-
-A gateway now holds a **list** of OS users, not one — if none is selected yet the form says `no user set` and offers only `set user` (no re-check: with nobody chosen there is nothing to ask the gateway about):
-
-    status    no user set
-
-    ⏎ u set user · l relays · q quit
-
-Setting one (`u` or Enter, the same prompt as the gateway chooser's own `u`) re-checks automatically; until the answer comes back the row reads `user set — <name>` rather than reverting to the denial. If the gateway refuses that *user* outright — a hello it rejects before ever looking at a key — the form names the user, not a key problem, and still offers only `set user` plus a manual re-check:
-
-    status    user refused by the gateway — alice
-
-    ⏎ u set user · r re-check · l relays · q quit
-
-**Revocation now bails to this screen.** A device that's already attached when its key is revoked used to keep re-dialing forever behind a silent `reconnecting…` — the revocation was invisible until the operator happened to look. Closed: three **consecutive** auth-class refusals during a captive reconnect now bail out of the retry loop and drop back to this pairing view instead.
+# Sessions & keys
 
 ## Attaching
 
 Run `clawee` with no arguments to open the session picker and attach. Flags tune the bare invocation:
 
 - `clawee` — open the local session picker and attach.
-- `clawee <gateway>` — select a gateway by name, then pick a session (see Gateways).
+- `clawee <gateway>` — select a gateway by name, then pick a session (see gateways).
 - `-i <key>` — private key file to authenticate with (default: ssh-agent, then `~/.clawee/id_ed25519`).
 - `--reconnect-timeout <deadline>` — per-attempt reconnect deadline (default: config, then `5s`).
 - `-s <sid>` — attach the remote pty session id directly.
@@ -120,79 +91,6 @@ Run `clawee` with no arguments to open the session picker and attach. Flags tune
 
 There is no `-r`/resume flag on the released binary.
 
-## Commands
-
-Every `clawee <command>` verb:
-
-- `status` — alias of `doctor` (read-only) — probe the chain hop-by-hop and report; also prints the clawee + claweed versions.
-- `sessions [--watch]` — list the daemon's pty sessions; `--watch` streams live session events.
-- `devices <list|approve|revoke>` — enroll and manage device keys, scoped to the current user (`approve [<#>|<fingerprint>] [--label <x>]` — bare = first asking, `#N` = pending index; `revoke <fp>`).
-- `relays [list|probe|priority|skip|use|auto|gateway]` — rank relays (LAN-first); bare `relays` opens the interactive list (see Relays).
-- `gateway [use|list|name|user …]` — switch gateways — a tree of gateways and their users (interactive; `l` = relays, `d` = devices); `use <fp|name> [<user>]`; `list`; `name <fp|name> <name>`; `user <fp|name> add|rm <user>`. Alias: `gw`.
-- `doctor [--fix] [--yes]` — diagnose the local setup; `--fix` repairs what it can (`--yes` skips consent prompts). Always reports the clawee + claweed versions, including when the chain is down — quote that block in a bug report.
-- `update [--auto] [--dry] [--force]` — self-update from release.clawee.org (shows the gap; skips if current); `--auto` installs the update unattended; `--dry` prints the plan only.
-- `lock-passphrase` — set the lock passphrase in the local config. Once set it also **gates startup** — opening a session asks for it first (the maintenance commands stay reachable). Ten free tries, then every further attempt waits 5 minutes.
-- `docs` — print the full CLI reference as markdown (docs sites, AI agents).
-- `version` — print the clawee version (also `--version`).
-
-There is no `help` verb — help spellings are flags only: `-h` / `--h` / `-help` / `--help`. Every verb rejects stray arguments; a usage refusal exits `2` on clawee, `64` on claweed. Run `clawee <command> --help` for that command's own page (`clawee docs` prints the full reference as markdown).
-
-Full generated CLI references, verbatim from each binary's own help renderer: https://clawee.org/docs/clawee (raw markdown: https://clawee.org/docs/clawee/cli-help.md) and https://clawee.org/docs/claweed (raw markdown: https://clawee.org/docs/claweed/cli-help.md).
-
-## Gateways
-
-Each gateway can hold more than one OS user now — clawee scopes sessions and devices per **(gateway, user)** pair, not just per gateway. Pick a gateway by short name, fall back to the chooser, or set friendly names; a gateway with no user added yet has nothing to attach as until you add one.
-
-- `clawee <name>` — attach scoped to that gateway, as its currently selected user (matches a short name, the gateway's name, or a fingerprint prefix).
-- `clawee gateway` — open the interactive gateway chooser — a tree of gateways with their users listed beneath (piped: list local sessions grouped by gateway, then by user, with live/dead state).
-- `clawee gateway use <fp|name> [<user>]` — switch to that gateway — and optionally that user — then attach.
-- `clawee gateway list` — table of every paired gateway: GATEWAY · FP · RELAYS · USERS · SESSIONS · DEFAULT.
-- `clawee gateway name <fp|name> <short>` — set a friendly short name for a gateway.
-- `clawee gateway user <fp|name> add|rm <user>` — add or remove a user known at that gateway (`add` also selects it).
-
-`gw` is a short alias for `gateway` — `clawee gw list` and `clawee gateway list` are the same command.
-
-With a single gateway, none of this shows — `clawee` goes straight to the picker. With more than one, bare `clawee` uses your last gateway or opens the chooser; press `g` in the picker to switch.
-
-The chooser's table is three aligned columns — `GATEWAY | USER | SESSIONS`, plus a `LIVE` column once a gateway has been probed. Each gateway is at least a 3-line block: its name alone on the first line, then the gateway's **full 16-hex fingerprint** sharing a line with its first user, further users indented beneath, and a selectable dim `+ add user` row closing every gateway (`⏎` on it does the same thing as `u`). The pick is a **user**, not a gateway:
-
-    GATEWAY               USER    SESSIONS  LIVE
-▸   workshop
-    a1b2c3d4e5f6a7b8      alice   2         1/2
-                          bob     0         —
-                          + add user
-    10.0.0.4              + add user
-
-Keys in the chooser: `↑↓` move over the tree (a gateway header, then its users indented beneath) · `⏎` pick a user row and attach as that (gateway, user) · `l` drill into the selected row's gateway relays and pin one · `d` open the devices view for the selected user (⏎ approves a pending key, `x` revokes) · `r` set the gateway's short name · `u` add a user to the selected gateway (a gateway with none has nothing but that row and must have one added before it can be used) · `q`/`Esc` back.
-
-The bar itself has three variants: in the picker's own chooser it reads `… · u user · q back`; reached bare (a countdown present but not armed) it's the same bar with `q quit`; while a launch countdown is **armed**, `u user` is dropped to make room for the countdown label — `u` still adds a user, it's just not named on that bar.
-
-## Relays
-
-A relay is the hop your session actually travels through. clawee keeps its own preference order per gateway — LAN relays first, then your manual order — and dials the top row. It never switches on its own: when the chosen relay stays unreachable, clawee tells you and opens the list so *you* pick.
-
-- `clawee relays` — open the interactive list (piped: prints the table instead).
-- `clawee relays list` — print the table in effective dial order: `# · RELAY · URL · WHERE · OBSERVED · STATUS`.
-- `clawee relays probe` — probe every relay, then print the table with what came back.
-- `clawee relays priority <id…>` — move the listed relays to the front of the manual order.
-- `clawee relays skip <id>` — never auto-dial that relay (at least one must stay enabled).
-- `clawee relays use <id>` — pin a relay to the front, ahead of the LAN-first order.
-- `clawee relays auto` — clear the pin — back to the automatic order, and re-probe.
-- `clawee relays gateway [<id>]` — show the gateways, or switch which one these relays belong to.
-
-Ids accept an unambiguous prefix of the relay's gateway fingerprint. The interactive list (also `/relays` while attached, and `l` from the picker) keys — the header bar prints the common six, the rest work but are not shown:
-
-- `↑↓` or `k`/`j` — move the selection.
-- `K`/`J`, also `+`/`-` — raise / lower the selected relay's priority; the selection follows it.
-- `s` · `u` · `a` — skip · pin to the front · clear the pin and re-probe.
-- `p` — probe every relay now and repaint with the result.
-- `⏎` — pin the selected relay. In `/relays` and `clawee relays` that also switches the live session; in the gateway chooser's drill-down it pins and returns.
-- `q` / `Esc` — leave without pinning anything.
-
-This list edits relay order *within* one gateway; it does not switch between gateways. To do that, leave with `q`/`Esc` and pick one in the gateway chooser, or run `clawee relays gateway <id>`.
-
-Its columns are `# · URL · STATUS · LAT · TTL · TYPE` — STATUS is what the last probe saw, LAT its round-trip, TTL how long that reading stays fresh (or the cooldown left on a failing relay), TYPE whether the relay is system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe. Choosing a relay while attached switches the live session onto it — clawee drops the stream and re-dials through the new relay.
-
 ## Views & keys
 
 Once attached, keystrokes pass through to the remote shell except:
@@ -201,82 +99,68 @@ Once attached, keystrokes pass through to the remote shell except:
 - `Ctrl+\` — lock the screen (unlock with the lock passphrase).
 - `F5` · `Ctrl+[` — redraw the remote screen — on claweed ≥ **v0.1.53** this repaints straight from the session holder, on the **main screen too**, not just the alt screen; an older holder falls back to the previous app-nudge. (`Ctrl+[` needs the kitty keyboard protocol, e.g. Ghostty.)
 
-clawee has one full-screen view behind most of its other keys. Each takes over the terminal, carries its key bar in the header, and leaves with `q`:
+clawee has one more full-screen view behind most of these keys. Each takes over the terminal, carries its key bar in the header, and leaves with `q`:
 
 - **session picker** — bare `clawee`; local + remote sessions. Keys below.
-- **pairing form** — the picker on an unpaired device (see Pairing).
-- **gateway chooser** — `g`, or `clawee gateway` (see Gateways).
-- **relay list** — `/relays`, `clawee relays`, or `l` from the picker / chooser (see Relays).
-- **devices view** — `d` on the picker's Local tab or in the chooser (see Devices).
-- **lock screen** — `Ctrl+\`, an idle timeout, or clawee's startup (see Locking).
-- **history pager** — `/history`.
-- **version panel** — `/version`; `Esc` goes back.
+- **pairing form** — the picker on an unpaired device — see pairing (Devices & pairing).
+- **gateway chooser** — `g`, or `clawee gateway` — see gateways.
+- **relay list** — `/relays`, `clawee relays`, or `l` from the picker / chooser — see relays.
+- **devices view** — `d` on the picker's Local tab or in the chooser — see devices.
+- **lock screen** — `Ctrl+\`, an idle timeout, or clawee's startup — see locking.
+- **history pager** — `/history` — see slash commands.
+- **version panel** — `/version` — clawee + claweed builds; `Esc` goes back.
 
 In the session picker (not while attached) — these never reach the remote shell:
 
-- `← →` · `⏎` — switch the Local / Remote tab · attach the selected session.
+- `←` `→` · `Enter` — switch the Local / Remote tab · attach the selected session.
 - `n` · `r` · `x` · `p` — new session · rename · close · purge.
-- `l` — switch the gateway's relay right there (⏎ switches, `q` backs out).
+- `l` — switch the gateway's relay right there — a compact list, `Enter` switches, `q` backs out.
 - `d` — Local tab: open the devices view (approve / revoke device keys). On the Remote tab `d` is detach.
 - `g` — open the gateway chooser (only with more than one gateway).
-- `q` / `Ctrl+C` — quit clawee.
+- `q` · `Ctrl+C` — quit clawee.
 
 A failed `n` new-session or attach keeps you in the picker rather than exiting: a stray `new session failed: … — ⏎ retries` or `attach failed: … — pick again to retry` notice appears and Enter tries again.
 
-On the Remote tab the row actions differ — they act on the remote pty, not your local session: `t` restart · `x` stop · `d` detach · `r` rename · `p` purge · `l` relays.
+On the **Remote** tab the row actions differ — they act on the remote pty, not your local session:
+
+- `t` · `x` — restart the session · stop it.
+- `d` — detach whoever is attached (here `d` is *not* the devices view).
+- `r` · `p` · `l` — rename · purge · relays, same as the Local tab.
 
 A remote session's state, on the Remote tab: **connected** (someone's attached) · **idle** (alive, nobody attached) · **interrupted** (the holder is gone — a reboot or crash — but attaching **restores it**: the full retained scrollback replays, with a `── session re-established · was running: <cmd> ──` marker when the daemon knows the foreground command (bare `── session re-established ──` when it doesn't; a `claude` session gets a `claude --continue` hint)) · **exited** · **closed**.
 
 green = connected · blue = idle · gray = detached · **interrupted = attach to restore** · live = recency · size = total output · last col = who holds it
-
-## Devices
-
-Every device that opens a session is a key enrolled on the box running `claweed` — trust is per **(gateway, user)**, so the list you see is always for one tenant. The devices view leads with the numbered **pending** queue (devices waiting to be let in), then the enrolled keys; its title reads `devices · <gateway> · <user>`. Open it with `d` on the picker's Local tab, or on a selected user in the gateway chooser. It needs a paired device: an untrusted key cannot read the list.
-
-- `↑↓` or `k`/`j` — move between keys.
-- `⏎` — approve the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.
-- `x` — revoke an enrolled key, or drop a pending knock. Also confirms, and warns separately if the key is *this* device's, which would lock you out.
-- `q` — back.
-
-The same three actions exist as commands, over the same list:
-
-    clawee devices                                    # pending knocks + enrolled keys, for the current user
-    clawee devices approve [<#>|<fp>] [--label <x>]    # bare = first asking, #N = pending index, or a fingerprint
-    clawee devices revoke <fp>                         # remove a key or drop a knock
-
-`approve` prints the resolved fingerprint it just enrolled — quote that line back if you need to prove which key it was.
-
-The daemon side has the same three verbs, host-local, on the box running `claweed` — they act on the *invoking* user only (a cross-user `manage` is referenced in claweed's own help text but is not yet built — don't reach for it):
-
-    claweed devices                                    # pending knocks + enrolled keys, host-local
-    claweed devices approve [<#>|<fp>] [--label <x>]    # same semantics as clawee's
-    claweed devices revoke <fp>                         # remove a key or drop a knock
-
-Revoking a device stops it opening *new* sessions immediately. A session it already has attached keeps running until its next reconnect — three consecutive auth refusals during that reconnect now bail the retry loop and drop back to the pairing view instead of redialing forever behind a silent `reconnecting…`.
 
 ## Locking
 
 Set a passphrase and clawee can cover the screen — on demand, after an idle period, or before it will open a session at all. The lock screen shows the session, gateway, relay and versions, but no terminal content.
 
 - `clawee lock-passphrase` — set the passphrase (masked entry). This is what turns the startup gate on.
-- `Ctrl+\` · `/lock` — lock now, from the session or the composer.
+- `Ctrl+\` · `/lock` — lock now — from the session, or from the composer.
 - `/passphrase` — set or clear the passphrase from inside a session.
 
-The lock screen tells you to type the passphrase and press Enter. It accepts a little more than that: `Enter` tries it, `Backspace` deletes one character, **`Ctrl+U` reveals** (toggles masking, to check what you typed), and **`Ctrl+Backspace` clears** the whole entry. Arrows, function keys and stray mouse clicks are swallowed rather than typed into the passphrase.
+The lock screen tells you to type the passphrase and press Enter. It accepts a little more than that:
+
+- `Enter` — try the passphrase.
+- `Backspace` — delete one character.
+- `Ctrl+U` — **reveal** — toggle masking, to check what you typed.
+- `Ctrl+Backspace` — clear the whole entry.
+
+Arrows, function keys and stray mouse clicks are swallowed rather than typed into the passphrase.
 
 **Unlocking** always lands you back in passthrough — a composer that was open before the lock is closed, not silently reopened. The screen you had before locking is preserved as-is; a quiet unlock just repaints from the session holder. The one exception: if the connection dropped and reconnected *while* locked, the buffered replay is discarded rather than risk showing stale output, and a single dim hint appears once — `reconnected while locked — ctrl+[ to refresh`.
 
-**Startup gate.** With a passphrase set, `clawee` asks for it before opening a session — the same screen, before any network. Ten tries are free; from the tenth, each further attempt waits 5 minutes, counted down on screen and remembered across restarts. `Ctrl+C` gives up (the in-session lock cannot be dismissed that way — it is guarding a live session). The maintenance commands — `status`, `doctor`, `relays`, `devices`, `update` — stay reachable without the passphrase, so a forgotten one never leaves you unable to see why something is broken.
+**Startup gate.** With a passphrase set, `clawee` asks for it before opening a session — the same screen, before any network. Ten tries are free; from the tenth, each further attempt waits 5 minutes, counted down on screen and remembered across restarts. `Ctrl+C` gives up (the in-session lock can't be dismissed that way — it's guarding a live session). The maintenance commands — `status`, `doctor`, `relays`, `devices`, `update` — stay reachable without the passphrase, so a forgotten one never leaves you unable to see why something's broken.
 
 ## Composer editing
 
 Keys inside the command composer (opened with `Ctrl+]`):
 
 - `Enter` · `Shift+Enter` — send the line · insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty).
-- Paste — multi-line pastes stay in the box; a pasted file path uploads the file; very large text is uploaded as a file too.
+- Paste — multi-line pastes stay in the box; a pasted **file path** uploads the file; very large text is uploaded as a file too.
 - `←` / `→` — move the cursor one character.
-- `Home`/`End` · `Ctrl+A`/`E` — jump to the current line start / end.
-- `Ctrl+Home`/`End` — jump to the buffer start / end (on a Mac laptop: `Fn+Ctrl+←`/`→`).
+- `Home`/`End` · `Ctrl+A`/`E` — jump to the current **line** start / end.
+- `Ctrl+Home`/`End` — jump to the **buffer** start / end (on a Mac laptop: `Fn+Ctrl+←`/`→`).
 - `↑` / `↓` — move between lines; at the top/bottom edge, recall command history.
 - `Backspace` / `Del` — delete before / after the cursor.
 - `Ctrl+K` / `Ctrl+U` — kill to line end / to line start.
@@ -292,10 +176,10 @@ Inside the composer (`Ctrl+]`):
 
 - `/upload` — send a file or directory — `/upload <path>` (also: paste a path or drop a file). Directories go as tar.gz; uploads land in a dated `uploads/<date>/…` dir on claweed ≥ v0.1.30.
 - `/download` — fetch a remote file or dir to your machine — `/download <path>`.
-- `/name` — set the session's display name — renames the remote pty.
-- `/relays` — relay priority & skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see Relays).
+- `/name` — set the session's display name — renames the **remote** pty.
+- `/relays` — relay priority & skip — ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose (switches the live session; see relays).
 - `/settings` — show or set client upload limits — `/settings [max-upload|async-upload <size>]`.
-- `/history` — page the remote session's command history: `↑↓` or `j`/`k` a line, `Space`/`f` and `b` a page, `g`/`G` top / bottom, `q` quits. The pager prints no key bar.
+- `/history` — page the remote session's command history — ↑↓ or j/k a line, Space/f and b a page, g/G top / bottom, q quits. The pager prints no key bar.
 - `/version` — show the clawee + claweed build versions (`Esc` goes back).
 - `/restart` — restart the attached session in place.
 - `/reconnect` — force a reconnect now.
@@ -305,30 +189,888 @@ Inside the composer (`Ctrl+]`):
 - `/passphrase` — set or clear the lock passphrase (masked entry).
 - `/quit` — exit clawee (alias `/q`).
 
+Stuck? `clawee doctor` diagnoses the chain, and `clawee status` shows exactly where a connection stops.
+
+## CLI reference
+
+Verbatim help pages for these commands, generated by `clawee docs` from the binary's own help renderer.
+
+### clawee
+
+```
+clawee — the Clawee terminal client.
+
+Usage:
+  clawee [<gateway>] [flags]   attach a session (optionally selecting a gateway by name)
+  clawee <command> [flags]
+
+Commands:
+  status                                               alias of doctor (read-only) — probe the chain
+                                                       and report
+  sessions                                             list the daemon's pty sessions (--watch
+                                                       streams events)
+                    [--watch]                          stream session events until the daemon closes
+                                                       the stream
+  gateway                                              gateways: interactive switch (bare), plus the
+                                                       scripting verbs (alias: gw)
+    use                                                switch the active gateway (optionally picking
+                                                       the user), then attach
+                    <fp|name> [<user>]
+    list                                               print the burrowee matrix gateways with users
+                                                       + session counts
+    name                                               set the gateway's local short-name ("-" or
+                                                       empty clears)
+                    <fp|name> <short>
+    user                                               grow or shrink the gateway's OS-user list
+                    add <user>                         add the user to the gateway (and select it)
+                    rm <user>                          remove the user (clears the selection if it
+                                                       pointed there)
+  devices                                              enroll + manage device keys on the gateway
+    list                                               enrolled keys + the numbered pending queue
+                                                       (numbers are approve indices)
+    approve                                            approve a pending knock (bare = the first
+                                                       asking key)
+                    <#>                                the pending knock at that number in the queue
+                    <fp>                               the pending knock with that exact SHA256:
+                                                       fingerprint
+                    [--label <label>]                  label for the enrolled key (single token,
+                                                       [A-Za-z0-9._-]{0,32})
+    revoke                                             drop an enrolled key or a pending knock
+                    <fp>
+  relays                                               rank relays, LAN-first (bare: interactive
+                                                       list; piped: the table)
+    list                                               print the relay table in effective dial order
+    probe                                              probe every relay, then print the table
+    priority                                           move the listed relays to the front of the
+                                                       manual order
+                    <id…>
+    skip                                               never auto-dial <id> (at least one relay must
+                                                       stay enabled)
+                    <id>
+
+Attach flags (bare invocation — no subcommand):
+    use                                                prefer <id> (pin to the front, ahead of
+                                                       LAN-auto)
+                    <id>
+    auto                                               clear the pin — back to LAN-auto order
+                                                       (re-probes)
+    gateway                                            show gateways, or switch the active gateway
+                                                       (alias: gw)
+                    [<id>]
+  doctor                                               diagnose the local setup; --fix repairs it
+                    [--fix]                            repair failed checks that clawee owns
+                                                       (consent-prompted)
+                    [--yes]                            skip consent prompts (unattended --fix)
+  update                                               self-update from release.clawee.org (skips
+                                                       when current)
+                    [--auto]                           install the update, unattended
+                    [--dry]                            print the update plan only, then exit
+                    [--force]                          reinstall even when already on the latest
+                                                       version
+  lock-passphrase                                      set the idle-lock passphrase in the local
+                                                       config
+  docs                                                 print the full CLI reference as markdown
+                                                       (docs sites, AI agents)
+  version                                              print the clawee version (also --version)
+                    [-i <key>]                         private key file (default: ssh-agent, then
+                                                       ~/.clawee/id_ed25519)
+                    [--reconnect-timeout <deadline>]   per-attempt reconnect deadline (default:
+                                                       config, then 5s)
+                    [-s <sid>]                         attach the remote session with this sid
+                                                       directly
+                    [--socket <path>]                  transport daemon socket path (default:
+                                                       $BURROWEE_TRANSPORT_SOCK, then config)
+                    [--transport <mode>]               transport mode: auto|ws|quic (default auto;
+                                                       empty = daemon default)
+                    [--user <user>]                    gateway OS user to claim for this run
+
+In the session picker:
+  g                open the gateway chooser (only with more than one gateway)
+
+Keys (once attached — keystrokes otherwise pass through to the remote shell):
+  Ctrl+]           open the command composer (type a /command or text; Enter sends)
+  Ctrl+\           lock the screen (idle-lock passphrase to unlock)
+  F5 · Ctrl+[      redraw the remote screen (Ctrl+[ needs kitty-keyboard, e.g. Ghostty)
+
+In the composer:
+  Enter            send the line (text → remote shell; /command → run it)
+  Shift+Enter      insert a newline (multi-line input; needs kitty-keyboard, e.g. Ghostty)
+  Paste            multi-line pastes stay in the box; a pasted file path uploads
+                   the file; very large text is uploaded as a file too
+  Tab              complete the /command
+  ↑ / ↓            recall command history (older / newer)
+  ← / →            move the cursor (Home/End or Ctrl+A/E = line start/end · Ctrl+Home/End = buffer)
+  Backspace · Del  delete before / after the cursor (Del = fn+Backspace)
+  Ctrl+K · Ctrl+U  kill to end of line · kill to start (Ctrl+Backspace = kill to start)
+  Ctrl+L           kill the whole line
+  Ctrl+C           clear the box (stays open)
+  Esc · Ctrl+]     close the composer · Ctrl+\  lock
+
+Slash commands (in the composer):
+  /upload · /download · /name · /relays · /settings · /history · /version
+  /restart · /reconnect · /refresh · /detach · /lock · /passphrase · /quit
+  /name renames the REMOTE pty; the picker rename (r) renames the local clawee session
+
+Run 'clawee <command> --help' for a command's own page ('clawee docs' prints the
+full reference as markdown).
+```
+
+### clawee sessions
+
+list the daemon's pty sessions (--watch streams events)
+
+```
+clawee sessions — list the daemon's pty sessions (--watch streams events)
+
+Usage:
+  clawee sessions [flags]
+
+  sessions
+             [--watch]   stream session events until the daemon closes the stream
+```
+
+### clawee lock-passphrase
+
+set the idle-lock passphrase in the local config
+
+```
+clawee lock-passphrase — set the idle-lock passphrase in the local config
+
+Usage:
+  clawee lock-passphrase
+```
+
+See the full generated references: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+
+# Gateways & users
+
+## Gateways
+
+Each gateway can hold more than one OS user now — clawee scopes sessions and devices per **(gateway, user)** pair, not just per gateway. Pick a gateway by short name, fall back to the chooser, or set friendly names; a gateway with no user added yet has nothing to attach as until you add one.
+
+- `clawee <name>` — attach scoped to that gateway, as its currently selected user (matches a short name, the gateway's name, or a fingerprint prefix).
+- `clawee gateway` — open the interactive gateway **chooser** — a tree of gateways with their users listed beneath (piped: list local sessions grouped by gateway, then by user, with live/dead state).
+- `clawee gateway use <fp|name> [<user>]` — switch to that gateway — and optionally that user — then attach.
+- `clawee gateway list` — table of every paired gateway — `GATEWAY · FP · RELAYS · USERS · SESSIONS · DEFAULT`.
+- `clawee gateway name <fp|name> <short>` — set a friendly short name for a gateway.
+- `clawee gateway user <fp|name> add|rm <user>` — add or remove a user known at that gateway (`add` also selects it).
+
+`gw` is a short alias for `gateway` — `clawee gw list` and `clawee gateway list` are the same command.
+
+With a single gateway, none of this shows — `clawee` goes straight to the picker. With more than one, bare `clawee` uses your last gateway or opens the chooser; press `g` in the picker to switch.
+
+The chooser's table is three aligned columns — `GATEWAY | USER | SESSIONS`, plus a `LIVE` column once a gateway has been probed. Each gateway is at least a 3-line block: its name alone on the first line, then the gateway's **full 16-hex fingerprint** sharing a line with its first user, further users indented beneath, and a selectable dim `+ add user` row closing every gateway (`Enter` on it does the same thing as `u`). The pick is a **user**, not a gateway:
+
+    GATEWAY               USER    SESSIONS  LIVE
+▸   workshop
+    a1b2c3d4e5f6a7b8      alice   2         1/2
+                          bob     0         —
+                          + add user
+    10.0.0.4              + add user
+
+Keys in the chooser:
+
+- `↑` `↓` · `Enter` — move over the tree (a gateway header, then its users indented beneath) · pick a user row to attach as that (gateway, user).
+- `l` — drill into the selected row's gateway **relays** and pin one (`Enter` picks, `q` goes back).
+- `d` — open the **devices** view for the selected user — `Enter` approves a pending key, `x` revokes.
+- `r` — set the gateway's short **name**.
+- `u` — **add a user** to the selected gateway (also the `+ add user` row's action). A gateway with none has nothing but that row and must have one added before it can be used.
+- `q` · `Esc` — back, without switching.
+
+The bar itself has three variants: in the picker's own chooser it reads `… · u user · q back`; reached bare (a countdown present but not armed) it's the same bar with `q quit`; while a launch countdown is **armed**, `u user` is dropped to make room for the countdown label — `u` still adds a user, it's just not named on that bar.
+
+## Client config upgrade
+
+**Upgrading is one-way.** Once a v0.2.x `clawee` writes `config.json` or a session's `meta.json` in the multi-user schema, an *older* clawee binary **refuses** the file outright rather than silently misreading it — there is no downgrade path. Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id lives in the system config root (moved there by the v0.2.0 migration ladder) and is an auth-challenge input: a regenerated value silently refuses every already-enrolled device. `claweed` never generates one on its own — only the installer's migration adopts it — so treat that file as load-bearing, not disposable.
+
+## CLI reference
+
+Verbatim help pages for the `gateway` verbs, generated by `clawee docs` from the binary's own help renderer.
+
+### clawee gateway
+
+gateways: interactive switch (bare), plus the scripting verbs (alias: gw)
+
+```
+clawee gateway — gateways: interactive switch (bare), plus the scripting verbs (alias: gw)
+
+Usage:
+  clawee gateway [<command>]
+
+Commands:
+  use                         switch the active gateway (optionally picking the user), then attach
+         <fp|name> [<user>]
+  list                        print the burrowee matrix gateways with users + session counts
+  name                        set the gateway's local short-name ("-" or empty clears)
+         <fp|name> <short>
+  user                        grow or shrink the gateway's OS-user list
+         add <user>           add the user to the gateway (and select it)
+         rm <user>            remove the user (clears the selection if it pointed there)
+
+Bare `clawee gateway` opens the interactive switch modal on a terminal, and
+prints the per-gateway session grouping when piped.
+```
+
+### clawee gateway use
+
+switch the active gateway (optionally picking the user), then attach
+
+```
+clawee gateway use — switch the active gateway (optionally picking the user), then attach
+
+Usage:
+  clawee gateway use <fp|name> [<user>]
+
+  use
+        <fp|name> [<user>]
+```
+
+### clawee gateway list
+
+print the burrowee matrix gateways with users + session counts
+
+```
+clawee gateway list — print the burrowee matrix gateways with users + session counts
+
+Usage:
+  clawee gateway list
+```
+
+### clawee gateway name
+
+set the gateway's local short-name ("-" or empty clears)
+
+```
+clawee gateway name — set the gateway's local short-name ("-" or empty clears)
+
+Usage:
+  clawee gateway name <fp|name> <short>
+
+  name
+         <fp|name> <short>
+```
+
+### clawee gateway user
+
+grow or shrink the gateway's OS-user list
+
+```
+clawee gateway user — grow or shrink the gateway's OS-user list
+
+Usage:
+  clawee gateway user <fp|name> add|rm <user>
+
+  user
+         add <user>   add the user to the gateway (and select it)
+         rm <user>    remove the user (clears the selection if it pointed there)
+```
+
+See the full generated references: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+
+# Relays
+
+## Relays
+
+A relay is the hop your session actually travels through. clawee keeps its own preference order per gateway — LAN relays first, then your manual order — and dials the top row. It never switches on its own: when the chosen relay stays unreachable, clawee tells you and opens the list so *you* pick.
+
+- `clawee relays` — open the interactive list (piped: prints the table instead).
+- `clawee relays list` — print the table in effective dial order — `# · RELAY · URL · WHERE · OBSERVED · STATUS`.
+- `clawee relays probe` — probe every relay, then print the table with what came back.
+- `clawee relays priority <id…>` — move the listed relays to the front of the manual order.
+- `clawee relays skip <id>` — never auto-dial that relay (at least one must stay enabled).
+- `clawee relays use <id>` — pin a relay to the front, ahead of the LAN-first order.
+- `clawee relays auto` — clear the pin — back to the automatic order, and re-probe.
+- `clawee relays gateway [<id>]` — show the gateways, or switch which one these relays belong to.
+
+Ids accept an unambiguous prefix of the relay's gateway fingerprint. In the interactive list (also reachable as `/relays` while attached, and with `l` from the picker):
+
+    relays    ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose
+
+    #  URL                  STATUS       LAT    TTL             TYPE
+▸   1  relay.example:8448   reachable    28ms   4m12s           system   📌 pinned
+    2  10.0.0.4:8448 (lan)  reachable    2ms    9m58s           edge
+    3  relay-b.example:844  unreachable  —      cooldown 38m0s  system
+
+**STATUS** is what the last probe saw, **LAT** its round-trip, **TTL** how long that reading stays fresh (or the cooldown left on a failing relay), **TYPE** whether the relay is system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe. Choosing a relay while attached **switches the live session** onto it — clawee drops the stream and re-dials through the new relay, rather than waiting for the next reconnect.
+
+- `↑` `↓` · `k`/`j` — move the selection.
+- `K`/`J` · `+`/`-` — raise / lower the selected relay's priority — the selection follows it.
+- `s` · `u` · `a` — skip · pin to the front · clear the pin and re-probe.
+- `p` — probe every relay now and repaint with the result.
+- `Enter` — pin the selected relay. In `/relays` and `clawee relays` that also switches the live session; in the gateway chooser's drill-down it pins and returns.
+- `q` · `Esc` — leave without pinning anything.
+
+The header bar has room for the common six — `+`/`-`, `q` and `Esc` work but aren't printed there.
+
+This list edits relay order *within* one gateway; it doesn't switch between gateways. To do that, leave with `q`/`Esc` and pick one in the gateway chooser, or run `clawee relays gateway <id>`.
+
+## CLI reference
+
+Verbatim help pages for the `relays` verbs, generated by `clawee docs` from the binary's own help renderer.
+
+### clawee relays
+
+rank relays, LAN-first (bare: interactive list; piped: the table)
+
+```
+clawee relays — rank relays, LAN-first (bare: interactive list; piped: the table)
+
+Usage:
+  clawee relays [<command>]
+
+Commands:
+  list                print the relay table in effective dial order
+  probe               probe every relay, then print the table
+  priority            move the listed relays to the front of the manual order
+             <id…>
+  skip                never auto-dial <id> (at least one relay must stay enabled)
+             <id>
+  use                 prefer <id> (pin to the front, ahead of LAN-auto)
+             <id>
+  auto                clear the pin — back to LAN-auto order (re-probes)
+  gateway             show gateways, or switch the active gateway (alias: gw)
+             [<id>]
+
+Ids accept an unambiguous prefix of the relay's gateway fingerprint.
+Bare `clawee relays` opens the interactive list on a terminal, and prints the
+table when piped.
+```
+
+### clawee relays list
+
+print the relay table in effective dial order
+
+```
+clawee relays list — print the relay table in effective dial order
+
+Usage:
+  clawee relays list
+```
+
+### clawee relays probe
+
+probe every relay, then print the table
+
+```
+clawee relays probe — probe every relay, then print the table
+
+Usage:
+  clawee relays probe
+```
+
+### clawee relays priority
+
+move the listed relays to the front of the manual order
+
+```
+clawee relays priority — move the listed relays to the front of the manual order
+
+Usage:
+  clawee relays priority <id…>
+
+  priority
+             <id…>
+```
+
+### clawee relays skip
+
+never auto-dial <id> (at least one relay must stay enabled)
+
+```
+clawee relays skip — never auto-dial <id> (at least one relay must stay enabled)
+
+Usage:
+  clawee relays skip <id>
+
+  skip
+         <id>
+```
+
+### clawee relays use
+
+prefer <id> (pin to the front, ahead of LAN-auto)
+
+```
+clawee relays use — prefer <id> (pin to the front, ahead of LAN-auto)
+
+Usage:
+  clawee relays use <id>
+
+  use
+        <id>
+```
+
+### clawee relays auto
+
+clear the pin — back to LAN-auto order (re-probes)
+
+```
+clawee relays auto — clear the pin — back to LAN-auto order (re-probes)
+
+Usage:
+  clawee relays auto
+```
+
+### clawee relays gateway
+
+show gateways, or switch the active gateway (alias: gw)
+
+```
+clawee relays gateway — show gateways, or switch the active gateway (alias: gw)
+
+Usage:
+  clawee relays gateway [<id>]
+
+  gateway
+            [<id>]
+```
+
+See the full generated references: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+
+# Devices & pairing
+
+## Pairing a device
+
+Two things have to line up: a **route** — [burrowee](https://burrowee.com) binds your device to a gateway — and **trust** — your clawee **device key** is enrolled on the box running `claweed`. clawee and claweed usually live on *different* machines, so the first device is enrolled by hand on the host; extra devices can then be approved remotely.
+
+The first device on a new host is enrolled by hand:
+
+1. Get your device key. clawee mints `~/.clawee/id_ed25519` the first time it runs; the private key never leaves the client. `clawee status` guarantees the key exists and prints its fingerprint — or mint it on its own with `clawee doctor --fix`. Then read the public half:
+
+       $ clawee status                # brings up the chain; mints the key + shows its fingerprint
+       $ clawee doctor --fix          # (or) mint / repair the identity key on its own
+       $ cat ~/.clawee/id_ed25519.pub  # the public key to enroll
+
+2. Send the public key to the host. Copy that `id_ed25519.pub` line to the box running `claweed` — paste it, `scp` it, however you like. Only the *public* key travels.
+
+3. Enroll it on the host. On the claweed box, register the key for your tenant — it enrolls against the *invoking* OS user (auth/devices/tenant all act on your own host login; there's no per-call user override). `claweed auth` is sugar over the full verb, `claweed tenant add` — renamed from the old `tenant add-key` spelling, which the released binary now refuses:
+
+       $ claweed auth @id_ed25519.pub         # from a file — sugar over `tenant add`
+       $ claweed auth "ssh-ed25519 AAAA… "   # or paste the key inline
+       $ claweed tenant add @id_ed25519.pub --data-dir <dir>  # the full verb — --data-dir is required here
+
+   Setting up your *own* login on a fresh host? `claweed setup` (see Quick start) already bootstrapped it from your `~/.ssh/authorized_keys` — this step is for enrolling a different device's key.
+
+**Additional devices — pair from the picker.** Once one device is enrolled you don't need host access for the next one. On the new device just run `clawee`: an untrusted key can't open a session, so the picker opens as a **pairing form** instead — a header naming the gateway, the status, and the device key fingerprint, with one action on the top row.
+
+    gateway   workshop (SHA256:a1b2c3d4)
+    status    not paired
+    key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    ⏎ pair · r re-check · l relays · q quit
+
+1. Send the request. Press Enter on the `pair` row. That queues a *knock* on the host and the status becomes `waiting for approval` with a running clock. If your ssh-agent holds several keys clawee asks which one to enrol first — pairing enrols exactly **one** key.
+
+2. Approve it from an enrolled device. On a device that's already paired, approve the pending fingerprint — from the CLI, or in the picker's devices view (`d` on the Local tab: `Enter` approves the selected pending key, `x` revokes):
+
+       $ clawee devices                                    # pending knocks + enrolled keys
+       $ clawee devices approve [<#>|<fp>] [--label <x>]  # bare = first asking, #N = pending index
+       $ clawee devices revoke <fp>                         # remove a key or drop a knock
+
+3. Back on the new device. The form re-checks itself every 10 seconds and drops into the ordinary picker once the key is trusted. Automatic polling stops after 10 minutes — Enter on the `re-check` row asks again at any time:
+
+       status    waiting for approval …
+
+       ⏎ re-check · l relays · q quit
+
+If the gateway itself can't be reached the form says `unreachable` and offers `continue` rather than pairing (a knock can't be queued through a gateway that never answers). `l` opens the relay list from any pairing state — relay choice needs no gateway trust, and a bad relay is the usual reason a gateway looks unreachable:
+
+    status    unreachable
+
+    ⏎ continue · r re-check · l relays · q quit
+
+A gateway now holds a **list** of OS users, not one — if none is selected yet the form says `no user set` and offers only `set user` (no re-check: with nobody chosen there is nothing to ask the gateway about):
+
+    status    no user set
+
+    ⏎ u set user · l relays · q quit
+
+Setting one (`u` or `Enter`, the same prompt as the gateway chooser's own `u`) re-checks automatically; until the answer comes back the row reads `user set — <name>` rather than reverting to the denial. If the gateway refuses that *user* outright — a hello it rejects before ever looking at a key — the form names the user, not a key problem, and still offers only `set user` plus a manual re-check:
+
+    status    user refused by the gateway — alice
+
+    ⏎ u set user · r re-check · l relays · q quit
+
+**Revocation now bails to this screen.** A device that's already attached when its key is revoked used to keep re-dialing forever behind a silent `reconnecting…` — the revocation was invisible until the operator happened to look. Closed: three **consecutive** auth-class refusals during a captive reconnect now bail out of the retry loop and drop back to this pairing view instead.
+
+## Devices
+
+Every device that opens a session is a **key** enrolled on the box running `claweed` — trust is per **(gateway, user)**, so the list you see is always for one tenant. The devices view leads with the numbered **pending** queue (devices waiting to be let in), then the enrolled keys; its title reads `devices · <gateway> · <user>`. Open it with `d` on the picker's Local tab, or on a selected user in the gateway chooser. It needs a paired device: an untrusted key can't read the list.
+
+- `↑` `↓` · `k`/`j` — move between keys.
+- `Enter` — **approve** the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.
+- `x` — **revoke** an enrolled key, or drop a pending knock. Also confirms — and warns separately if the key is *this* device's, which would lock you out.
+- `q` — back.
+
+The same three actions exist as commands, over the same list — use whichever fits:
+
+    $ clawee devices                                    # pending knocks + enrolled keys, for the current user
+    $ clawee devices approve [<#>|<fp>] [--label <x>]  # bare = first asking, #N = pending index, or a fingerprint
+    $ clawee devices revoke <fp>                         # remove a key or drop a knock
+
+`approve` prints the resolved fingerprint it just enrolled — quote that line back if you need to prove which key it was.
+
+The daemon side has the same three verbs, host-local, on the box running `claweed` — they act on the *invoking* user only (a cross-user `manage` is referenced in claweed's own help text but is not yet built — don't reach for it):
+
+    $ claweed devices                                    # pending knocks + enrolled keys, host-local
+    $ claweed devices approve [<#>|<fp>] [--label <x>]  # same semantics as clawee's
+    $ claweed devices revoke <fp>                         # remove a key or drop a knock
+
+Revoking a device stops it opening *new* sessions immediately. A session it already has attached keeps running until its next reconnect — three consecutive auth refusals during that reconnect now bail the retry loop and drop back to the pairing view instead of redialing forever behind a silent `reconnecting…`.
+
+## CLI reference
+
+Verbatim help pages for the device verbs, generated by `clawee docs` / `claweed docs` from each binary's own help renderer.
+
+### clawee devices
+
+enroll + manage device keys on the gateway
+
+```
+clawee devices — enroll + manage device keys on the gateway
+
+Usage:
+  clawee devices <list|approve|revoke>
+
+Commands:
+  list                          enrolled keys + the numbered pending queue (numbers are approve
+                                indices)
+  approve                       approve a pending knock (bare = the first asking key)
+            <#>                 the pending knock at that number in the queue
+            <fp>                the pending knock with that exact SHA256: fingerprint
+            [--label <label>]   label for the enrolled key (single token, [A-Za-z0-9._-]{0,32})
+  revoke                        drop an enrolled key or a pending knock
+            <fp>
+```
+
+### clawee devices list
+
+enrolled keys + the numbered pending queue (numbers are approve indices)
+
+```
+clawee devices list — enrolled keys + the numbered pending queue (numbers are approve indices)
+
+Usage:
+  clawee devices list
+```
+
+### clawee devices approve
+
+approve a pending knock (bare = the first asking key)
+
+```
+clawee devices approve — approve a pending knock (bare = the first asking key)
+
+Usage:
+  clawee devices approve [<#>|<fp>] [flags]
+
+  approve
+            <#>                 the pending knock at that number in the queue
+            <fp>                the pending knock with that exact SHA256: fingerprint
+            [--label <label>]   label for the enrolled key (single token, [A-Za-z0-9._-]{0,32})
+```
+
+### clawee devices revoke
+
+drop an enrolled key or a pending knock
+
+```
+clawee devices revoke — drop an enrolled key or a pending knock
+
+Usage:
+  clawee devices revoke <fp>
+
+  revoke
+           <fp>
+```
+
+### claweed devices
+
+manage device keys host-locally (invoking user only)
+
+```
+claweed devices — manage device keys host-locally (invoking user only)
+
+Usage:
+  claweed devices <command>
+
+Commands:
+  list                           enrolled keys + the numbered pending queue (numbers are approve
+                                 indices)
+            [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+  approve                        approve a pending knock (bare = the first asking key)
+            <#>                  the pending knock at that number in the queue
+            <fp>                 the pending knock with that exact SHA256: fingerprint
+            [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+            [--label <label>]    label for the enrolled key ([A-Za-z0-9._-]{0,32})
+  revoke                         drop an enrolled key or a pending knock
+            <fp>
+            [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+```
+
+### claweed devices list
+
+enrolled keys + the numbered pending queue (numbers are approve indices)
+
+```
+claweed devices list — enrolled keys + the numbered pending queue (numbers are approve indices)
+
+Usage:
+  claweed devices list [flags]
+
+  list
+         [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid default
+                              (system root as root, ~/.clawee/data otherwise))
+```
+
+### claweed devices approve
+
+approve a pending knock (bare = the first asking key)
+
+```
+claweed devices approve — approve a pending knock (bare = the first asking key)
+
+Usage:
+  claweed devices approve [<#>|<fp>] [flags]
+
+  approve
+            <#>                  the pending knock at that number in the queue
+            <fp>                 the pending knock with that exact SHA256: fingerprint
+            [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+            [--label <label>]    label for the enrolled key ([A-Za-z0-9._-]{0,32})
+```
+
+### claweed devices revoke
+
+drop an enrolled key or a pending knock
+
+```
+claweed devices revoke — drop an enrolled key or a pending knock
+
+Usage:
+  claweed devices revoke <fp> [flags]
+
+  revoke
+           <fp>
+           [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid
+                                default (system root as root, ~/.clawee/data otherwise))
+```
+
+### claweed tenant add
+
+enroll a trust key for YOURSELF
+
+```
+claweed tenant add — enroll a trust key for YOURSELF
+
+Usage:
+  claweed tenant add <pubkey|@file> [flags]
+
+  add
+        <pubkey>             the public key line itself
+        @<file>              read the public key from the named file
+        [--data-dir <dir>]   claweed data dir (required; `claweed auth` resolves a default)
+```
+
+### claweed auth
+
+pair a device key (sugar over tenant add)
+
+```
+claweed auth — pair a device key (sugar over tenant add)
+
+Usage:
+  claweed auth <pubkey|@file> [flags]
+
+  auth
+         <pubkey|@file>
+         [--data-dir <dir>]   claweed data dir (default: installed boot unit, then the euid default
+                              (system root as root, ~/.clawee/data otherwise))
+```
+
+See the full generated references: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+
+# The daemon
+
+## Setting up the daemon
+
+`claweed` is the session broker — it runs on every box that *hosts* sessions. Install it, then run `claweed setup` once: a single first-run pass that repairs the local install and bootstraps *your own* login as the box's first trusted tenant.
+
+    $ curl -fsSL https://release.clawee.org/claweed/install.sh | sh
+    $ claweed setup            # first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)
+
+Under the hood that's two steps run back to back: `doctor --fix` repairs whatever it can about the local install, then `claweed` reads the *invoking* user's own `~/.ssh/authorized_keys` and offers to enroll each key it finds as that user's first trusted device. Nothing is written without consent, and running it again is a no-op once the tenant already exists.
+
+Enrolling a *different* device's key — not this host's own login — is a separate step: see Devices & pairing.
+
+## Doctor & status
+
+Both sides speak the same two verbs. On the host, `claweed doctor [--fix] [--yes]` diagnoses the deployment and repairs service-user-owned bits (`--yes` skips consent prompts); `claweed status` is its read-only alias — same report, no `--fix`.
+
+On the client, `clawee doctor [--fix] [--yes]` diagnoses the local setup and always prints the clawee + claweed versions — even when nothing connects; `clawee status` probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.
+
+`claweed doctor`, run on the session host, reports the installed daemon version alongside the version actually running — if they differ, restart the service.
+
 ## Update
 
 Both components self-update in place from the signed release channel:
 
-    clawee update             # shows the version gap; skips if current
-    clawee update --auto      # install the update, unattended
-    clawee update --dry       # report only
-    clawee update --force     # reinstall the latest regardless
-    claweed update            # same, for the daemon
-    claweed update --auto     # apply unattended; restarts the service only if changed
-    claweed setup             # first run: doctor --fix, then bootstrap YOUR tenant keys (see Install)
+    $ clawee update             # shows the version gap; skips if current
+    $ clawee update --auto      # install the update, unattended
+    $ clawee update --dry       # report only
+    $ clawee update --force     # reinstall the latest regardless
+    $ claweed update            # same, for the daemon
+    $ claweed update --auto     # apply unattended; restarts the service only if changed
+    $ claweed setup             # first run: doctor --fix, then bootstrap YOUR tenant keys (see Setup)
 
-There's also a forcing entry point, `upgrade.sh` — **this is not how you upgrade — install.sh is**. It exists for same-semver re-cuts the normal update ladder gate cannot see (the version number didn't change, so `update` sees nothing to do):
+**upgrade.sh is not how you upgrade — install.sh is.** It's a forcing entry point for same-semver re-cuts the normal update ladder gate can't see (the version number didn't change, so `update` sees nothing to do):
 
-    curl -fsSL https://release.clawee.org/claweed/upgrade.sh | sh -s -- <version>
+    $ curl -fsSL https://release.clawee.org/claweed/upgrade.sh | sh -s -- <version>
+
+## Service unit
+
+The daemon installs itself as a managed boot unit — a launchd `.plist` on macOS, a systemd `.service` on Linux. `claweed service print` renders that unit to stdout, given the same paths and run-as identity the installer already resolved — useful for inspecting what got installed, or for a manual install on a box the installer can't reach directly.
+
+## Tenant management
+
+`claweed tenant` manages *your own* tenant enrollment — the same enrollment `claweed setup` bootstraps automatically from `~/.ssh/authorized_keys` on first run, and the same one `claweed auth` / `claweed tenant add` sugar over for a second device (see Devices & pairing).
+
+**Upgrading is one-way.** Once a v0.2.x `clawee` writes `config.json` or a session's `meta.json` in the multi-user schema, an *older* clawee binary **refuses** the file outright rather than silently misreading it — there is no downgrade path. Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id lives in the system config root (moved there by the v0.2.0 migration ladder) and is an auth-challenge input: a regenerated value silently refuses every already-enrolled device. `claweed` never generates one on its own — only the installer's migration adopts it — so treat that file as load-bearing, not disposable.
 
 ## Troubleshooting
 
-- `clawee doctor [--fix] [--yes]` diagnoses the local setup and repairs what it can, and always prints the clawee + claweed versions — even when nothing connects.
-- `claweed doctor` (on the session host) reports the installed daemon version alongside the version actually running; if they differ, restart the service.
-- `clawee status` / `claweed status` are read-only aliases of `doctor` — same report, no `--fix`.
-- `clawee status` probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.
-- `claweed setup` bootstraps a first-time host: `doctor --fix` plus consent-gated tenant enrollment from the invoking user's own `~/.ssh/authorized_keys`.
-- Docs: https://clawee.org/docs · Transport (pairing, gateways, relays): https://burrowee.com
+Quick diagnostic rows, condensed from `doctor`/`status` on both sides:
+
+- `clawee doctor [--fix] [--yes]` — diagnoses the local setup and repairs what it can, and always prints the clawee + claweed versions — even when nothing connects.
+- `claweed doctor` — run on the session host — reports the installed daemon version alongside the version actually running; if they differ, restart the service.
+- `clawee status` / `claweed status` — read-only aliases of `doctor` — same report, no `--fix`.
+- `clawee status` — probes the chain hop-by-hop (socket → daemon → relay → claweed → auth) and shows exactly where a connection stops.
+- `claweed setup` — bootstraps a first-time host: `doctor --fix` plus consent-gated tenant enrollment from the invoking user's own `~/.ssh/authorized_keys`.
+
+## CLI reference
+
+Verbatim help pages for the daemon-operations verbs, generated by `claweed docs` from the binary's own help renderer.
+
+### claweed setup
+
+first-time setup for the invoking user — doctor --fix, then bootstrap YOUR tenant keys
+
+```
+claweed setup — first-time setup for the invoking user — doctor --fix, then bootstrap YOUR tenant keys
+
+Usage:
+  claweed setup
+```
+
+### claweed doctor
+
+diagnose the deployment; --fix repairs service-user-owned bits
+
+```
+claweed doctor — diagnose the deployment; --fix repairs service-user-owned bits
+
+Usage:
+  claweed doctor [flags]
+
+  doctor
+           [--allowlist <path>]              spawn-allow uid list path
+           [--data-dir <dir>]                data dir (default: installed boot unit)
+           [--fix]                           repair failed checks (asks consent)
+           [--register-socket <path>]        gateway register socket path (default: installed boot
+                                             unit)
+           [--service-home <dir>]            service home dir (see --service-uid)
+           [--service-uid <uid>]             service uid (default: the --data-dir owner; set by a
+                                             root re-read)
+           [--service-user <user>]           service user (see --service-uid)
+           [--sessions-verdict <verdict>]    relayed sessions verdict (root re-read; display only)
+           [--socket <path>]                 dev unix socket path (default: installed boot unit)
+           [--system-uid-allowlist <path>]   system-uid opt-in path
+           [--yes]                           skip consent prompts (unattended --fix)
+```
+
+### claweed status
+
+alias of doctor (read-only) — same report, no --fix
+
+```
+claweed status — alias of doctor (read-only) — same report, no --fix
+
+Usage:
+  claweed status [flags]
+
+  status
+           [--data-dir <dir>]           service data dir (default: installed boot unit, then the
+                                        euid default (system root as root, ~/.clawee/data
+                                        otherwise))
+           [--register-socket <path>]   gateway register socket path (default: installed boot unit)
+           [--socket <path>]            dev unix socket path (default: installed boot unit)
+```
+
+### claweed update
+
+update claweed from release.clawee.org
+
+```
+claweed update — update claweed from release.clawee.org
+
+Usage:
+  claweed update [flags]
+
+  update
+           [--auto]    apply unattended; restart only if changed
+           [--dry]     print the update plan only, then exit
+           [--force]   reinstall everything (binary + spawn policy + boot-unit) + restart
+```
+
+### claweed service print
+
+render the boot unit — a launchd .plist / systemd .service — to stdout
+
+```
+claweed service print — render the boot unit — a launchd .plist / systemd .service — to stdout
+
+Usage:
+  claweed service print [flags]
+
+  print
+          [--claweed <path>]           claweed binary path (required)
+          [--group <group>]            run-as group (optional)
+          [--home <dir>]               service user's home dir — the unit's HOME (always required)
+          [--kind <kind>]              unit kind: launchd | systemd (required)
+          [--log <path>]               launchd stderr/stdout log path (optional)
+          [--register-socket <path>]   claweed --register-socket path (production)
+          [--root-scheme]              root daemon, no run-as user (excludes --user/--group; --home
+                                       still required)
+          [--socket <path>]            claweed --socket path (dev)
+          [--user <user>]              run-as user (required unless --root-scheme)
+```
+
+### claweed tenant
+
+manage YOUR OWN tenant enrollment
+
+```
+claweed tenant — manage YOUR OWN tenant enrollment
+
+Usage:
+  claweed tenant <command>
+
+Commands:
+  add                        enroll a trust key for YOURSELF
+        <pubkey>             the public key line itself
+        @<file>              read the public key from the named file
+        [--data-dir <dir>]   claweed data dir (required; `claweed auth` resolves a default)
+```
+
+See the full generated references: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+
+---
+
+Full generated CLI references, verbatim from each binary's own help renderer: https://clawee.org/docs/clawee (raw markdown: https://clawee.org/docs/clawee/cli-help.md) and https://clawee.org/docs/claweed (raw markdown: https://clawee.org/docs/claweed/cli-help.md).
 
 ---
 

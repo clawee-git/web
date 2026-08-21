@@ -1,86 +1,97 @@
 {
-  "_comment": "Docs-sync marker for clawee.org. `surfaces` is the published UI/command surface: every place in the code whose text a user reads off this site. Each has a matching `DOCS-SYNC <anchor>` comment at that spot in the source — `grep -rn 'DOCS-SYNC' <repo>` is the authoritative list, and it should agree with this one. `syncs` records what each pass was verified against, so the next pass reviews `git log <sha>..origin/main` per repo instead of re-auditing. Never edit a past sync entry — prepend a new one.",
-
+  "_comment": "Docs-sync marker for clawee.org. `surfaces` is the published UI/command surface: every place in the code whose text a user reads off this site. Each has a matching `DOCS-SYNC <anchor>` comment at that spot in the source — `grep -rn 'DOCS-SYNC' <repo>` is the authoritative list, and it should agree with this one. `syncs` records what each pass was verified against, so the next pass reviews `git log <sha>..origin/main` per repo instead of re-auditing. Never edit a past sync entry — prepend a new one. Since the 2026-08-21 multi-page redesign, `anchor` values point at the page that now carries that content (e.g. `/docs/sessions#keys`), not the old single `/docs#<section>` — each feature page also embeds the matching verbatim CLI help section (`<!-- cli-embed: <binary> <section path> -->` slots): after refreshing `docs/<binary>/cli-help.md` from a new release, run `python3 tools/embed-cli-help.py --write` to refresh every embed and commit the result; `python3 tools/embed-cli-help.py --check` verifies the embeds still match the raw copies (exit 0 = clean).",
   "surfaces": [
     {
       "view": "top-level help",
       "src": "cli:cmd/clawee/usage.go buildUsage (generated from help.go helpTree)",
-      "anchor": "/docs#commands",
+      "anchor": "/docs/clawee#clawee",
       "note": "buildUsage now renders the FULL command tree (every sub-verb, every flag — operator ruling 2026-08-21), not just the first level; it walks the same helpTree that cli:cmd/clawee/docs.go renderDocs walks. The GENERATED cli:docs/cli-help.md (`clawee docs`, build-gated by TestDocsFileIsInSync) additionally fences each verb's verbatim --help page beneath the tree; sync command tables from that file, never from this page alone."
     },
     {
       "view": "relays verbs",
       "src": "cli:cmd/clawee/docs.go renderDocs (#relays marker; auto/gateway appear only at this level)",
-      "anchor": "/docs#relays",
+      "anchor": "/docs/relays#relays",
       "note": "The full verb set (auto/gateway included). The hand-written relaysUsage string is GONE (2026-08-20 cli help port); `clawee relays --help` and the generated reference are the surface."
     },
     {
       "view": "top-level Commands table",
       "src": "cli:cmd/clawee/docs.go:46 renderDocs",
-      "anchor": "/docs#commands",
+      "anchor": "/docs/clawee#clawee",
       "note": "top-level Commands table publishes from the generated reference (cli:docs/cli-help.md via `clawee docs`), byte-identical to the binary's own --help by construction."
     },
     {
       "view": "session picker",
       "src": "cli:internal/picker/render.go tabBar",
-      "anchor": "/docs#keys",
+      "anchor": "/docs/sessions#keys",
       "note": "Per-tab: the Local and Remote hints differ (d = devices vs detach)."
     },
     {
       "view": "pairing form",
       "src": "cli:internal/picker/pair_header.go pairFormHint",
-      "anchor": "/docs#pairing",
+      "anchor": "/docs/devices#pairing",
       "note": "Five states now (PairFormPair / PairFormWait / PairFormContinue / PairFormUser / PairFormNoUser): pair / re-check / continue / set-user-with-recheck / set-user-without-recheck. PairFormNoUser drops `r` deliberately — a re-check with no tenant selected is a hello claiming nobody, which the gateway can only refuse."
     },
     {
       "view": "gateway chooser",
       "src": "cli:cmd/clawee/gateway_modal.go gwHint",
-      "anchor": "/docs#gateways",
+      "anchor": "/docs/gateways#gateways",
       "note": "Three bars: gwHint (in-picker, 'q back'), gwHintQuit (entry screen, countdown not armed, 'q quit'), gwHintEntryMode (entry screen, countdown armed — drops 'u user' to hold the 80-column budget; `u` still works while armed, just isn't listed)."
     },
     {
       "view": "relay list — bar, ⏎ verbs, columns",
       "src": "cli:internal/relay_pref/list_render.go RenderList",
-      "anchor": "/docs#relays"
+      "anchor": "/docs/relays#relays"
     },
     {
       "view": "relay list — key handler",
       "src": "cli:cmd/clawee/relays_ui.go handleKey",
-      "anchor": "/docs#relays",
+      "anchor": "/docs/relays#relays",
       "note": "Accepts MORE than the bar shows: +/- alias K/J, k/j alias arrows, q closes. The bar cannot grow (80-col budget), so the docs page is the only place these are published. 'G' (cycle gateway) was REMOVED here on 2026-07-29 — do not re-document it."
     },
     {
       "view": "relay quick switch (picker `l`)",
       "src": "cli:cmd/clawee/relay_quickswitch.go quickRelayLines",
-      "anchor": "/docs#relays"
+      "anchor": "/docs/relays#relays"
     },
     {
       "view": "devices view",
       "src": "cli:cmd/clawee/devices_view.go devicesHint",
-      "anchor": "/docs#devices",
+      "anchor": "/docs/devices#devices",
       "note": "Acts on trust (approve/revoke a device key) — a silent drift here is worse than cosmetic."
     },
     {
       "view": "lock screen",
       "src": "cli:internal/lock_screen/render.go Render",
-      "anchor": "/docs#lock",
+      "anchor": "/docs/sessions#lock",
       "note": "Advertises only 'type the passphrase + Enter'."
     },
     {
       "view": "lock screen — editing keys",
       "src": "cli:internal/lock_input/lock_input.go",
-      "anchor": "/docs#lock",
+      "anchor": "/docs/sessions#lock",
       "note": "Ctrl+U reveal / Ctrl+Backspace clear appear NOWHERE on screen. Docs are their only home."
     },
     {
       "view": "/history pager",
       "src": "cli:cmd/clawee/history_pager_ui.go pageAltScreen",
-      "anchor": "/docs#slash",
+      "anchor": "/docs/sessions#slash",
       "note": "No key bar is rendered at all — every key is invisible until pressed."
     }
   ],
-
   "syncs": [
+    {
+      "date": "2026-08-21",
+      "scope": "multi-page redesign — hub + quickstart + 5 feature pages, embedded CLI reference excerpts; content moved from the single page, not re-derived",
+      "released": {
+        "clawee": "v0.2.12",
+        "claweed": "v0.2.4"
+      },
+      "repos": {
+        "clawee-git/cli": "c995a53",
+        "clawee-git/daemon": "64a2dfc"
+      },
+      "notes": "Splits the single /docs page into a hub (docs/index.html) plus /docs/quickstart, /docs/sessions, /docs/gateways, /docs/relays, /docs/devices, /docs/daemon — same released pins as the entry below, re-verified during the move rather than re-derived from source. Each feature page ends with a CLI reference section embedding the verbatim help pages for its own verbs via <!-- cli-embed --> slots (python3 tools/embed-cli-help.py --write), sourced from the existing docs/clawee/cli-help.md + docs/claweed/cli-help.md raw copies. The hub's cards carry the retired single-page anchor ids (#requirements/#install/#pairing, #attach/#keys/#lock/#composer/#slash, #commands, #gateways, #relays, #devices) so every previously published deep link still lands on the right card. llms-full.txt rebuilt to mirror the new page set (hub intro, then the six pages in sidebar order under `# `/`## ` headings, embedded help as fenced blocks, pointers to the two raw cli-help.md URLs); llms.txt already listed the new page URLs. docs_sync.json `surfaces` anchors moved from `/docs#<section>` to the page (+ fragment) that now carries that content. No CLI/daemon surface changed in this pass — this is a docs-site reshape only."
+    },
     {
       "date": "2026-08-21",
       "scope": "released v0.2.x catch-up: help port (help verb removed, docs verb, level-by-level --help), claweed setup + tenant add, chooser tree re-layout, interrupted sessions, unlock/refresh repaint, one-way upgrade callout; published /docs/clawee + /docs/claweed generated references",
