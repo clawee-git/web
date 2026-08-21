@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — devices &amp; pairing</title>
+  <meta name="description" content="The device trust model: pairing-form states, knock/approve, the devices view, and clawee/claweed device verbs.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — devices &amp; pairing">
+  <meta property="og:description" content="The device trust model: pairing-form states, knock/approve, the devices view, and clawee/claweed device verbs.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/devices">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — devices &amp; pairing">
+  <meta name="twitter:description" content="The device trust model: pairing-form states, knock/approve, the devices view, and clawee/claweed device verbs.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-wide docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices" class="active">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
+      <!-- TOC -->
+      <nav class="toc">
+        <p class="t">Contents</p>
+        <ul>
+          <li><a href="#pairing">Pairing a device</a></li>
+          <li><a href="#devices">Devices</a></li>
+          <li><a href="#reference">CLI reference</a></li>
+          <li><a href="#cli-devices">clawee devices</a></li>
+          <li><a href="#cli-devices-list">clawee devices list</a></li>
+          <li><a href="#cli-devices-approve">clawee devices approve</a></li>
+          <li><a href="#cli-devices-revoke">clawee devices revoke</a></li>
+          <li><a href="#cli-claweed-devices">claweed devices</a></li>
+          <li><a href="#cli-claweed-devices-list">claweed devices list</a></li>
+          <li><a href="#cli-claweed-devices-approve">claweed devices approve</a></li>
+          <li><a href="#cli-claweed-devices-revoke">claweed devices revoke</a></li>
+          <li><a href="#cli-claweed-tenant-add">claweed tenant add</a></li>
+          <li><a href="#cli-claweed-auth">claweed auth</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc">
+        <!-- PAIRING -->
+        <section id="pairing">
+          <p class="section-h">Reference</p>
+          <h1>Pairing a device</h1>
+          <p>
+            Two things have to line up: a <strong>route</strong> — <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a> binds your
+            device to a gateway — and <strong>trust</strong> — your clawee <strong>device key</strong> is
+            enrolled on the box running <code>claweed</code>. clawee and claweed usually live on
+            <em>different</em> machines, so the first device is enrolled by hand on the host; extra
+            devices can then be approved remotely.
+          </p>
+          <div class="callout">
+            <strong>Additional devices — pair from the picker.</strong> Once one device is enrolled you
+            don't need host access for the next one. On the new device just run <code>clawee</code>: an
+            untrusted key can't open a session, so the picker opens as a <strong>pairing form</strong>
+            instead — a header naming the gateway, the status, and the device key fingerprint, with one
+            action on the top row.
+            <pre style="margin:10px 0 0">gateway   workshop (SHA256:a1b2c3d4)
+status    not paired
+key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+<span class="mut">⏎ pair · r re-check · l relays · q quit</span></pre>
+          </div>
+          <ol class="steps">
+            <li>
+              <span class="st">Send the request</span>
+              <p>Press <kbd>Enter</kbd> on the <code>pair</code> row. That queues a <em>knock</em> on the
+                host and the status becomes <code>waiting for approval</code> with a running clock. If
+                your ssh-agent holds several keys clawee asks which one to enrol first — pairing enrols
+                exactly <strong>one</strong> key.</p>
+            </li>
+            <li>
+              <span class="st">Approve it from an enrolled device</span>
+              <p>On a device that's already paired, approve the pending fingerprint — from the CLI, or in
+                the picker's devices view (<kbd>d</kbd> on the Local tab: <kbd>Enter</kbd> approves the
+                selected pending key, <kbd>x</kbd> revokes):</p>
+              <pre><span class="p">$</span> clawee devices                                    <span class="mut"># pending knocks + enrolled keys</span>
+<span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
+            </li>
+            <li>
+              <span class="st">Back on the new device</span>
+              <p>The form re-checks itself every 10 seconds and drops into the ordinary picker once the
+                key is trusted. Automatic polling stops after 10 minutes — <kbd>Enter</kbd> on the
+                <code>re-check</code> row asks again at any time:</p>
+              <pre style="margin:10px 0 0">status    waiting for approval …
+
+<span class="mut">⏎ re-check · l relays · q quit</span></pre>
+            </li>
+          </ol>
+          <p style="margin-top:16px">
+            If the gateway itself can't be reached the form says <code>unreachable</code> and offers
+            <code>continue</code> rather than pairing (a knock can't be queued through a gateway that
+            never answers). <kbd>l</kbd> opens the relay list from any pairing state — relay choice needs
+            no gateway trust, and a bad relay is the usual reason a gateway looks unreachable:
+          </p>
+          <pre style="margin:10px 0 0">status    unreachable
+
+<span class="mut">⏎ continue · r re-check · l relays · q quit</span></pre>
+          <p style="margin-top:16px">
+            A gateway now holds a <strong>list</strong> of OS users, not one — if none is selected yet the
+            form says <code>no user set</code> and offers only <code>set user</code> (no re-check: with
+            nobody chosen there is nothing to ask the gateway about):
+          </p>
+          <pre style="margin:10px 0 0">status    no user set
+
+<span class="mut">⏎ u set user · l relays · q quit</span></pre>
+          <p style="margin-top:16px">
+            Setting one (<kbd>u</kbd> or <kbd>Enter</kbd>, the same prompt as the gateway chooser's own
+            <kbd>u</kbd>) re-checks automatically; until the answer comes back the row reads
+            <code>user set — &lt;name&gt;</code> rather than reverting to the denial. If the gateway
+            refuses that <em>user</em> outright — a hello it rejects before ever looking at a key — the
+            form names the user, not a key problem, and still offers only <code>set user</code> plus a
+            manual re-check:
+          </p>
+          <pre style="margin:10px 0 0">status    user refused by the gateway — alice
+
+<span class="mut">⏎ u set user · r re-check · l relays · q quit</span></pre>
+          <div class="callout">
+            <strong>Revocation now bails to this screen.</strong> A device that's already attached when its
+            key is revoked used to keep re-dialing forever behind a silent <code>reconnecting…</code> — the
+            revocation was invisible until the operator happened to look. Closed: three <b>consecutive</b>
+            auth-class refusals during a captive reconnect now bail out of the retry loop and drop back to
+            this pairing view instead.
+          </div>
+        </section>
+
+        <!-- DEVICES -->
+        <section id="devices">
+          <p class="section-h">Reference</p>
+          <h2>Devices</h2>
+          <p>
+            Every device that opens a session is a <strong>key</strong> enrolled on the box running
+            <code>claweed</code> — trust is per <strong>(gateway, user)</strong>, so the list you see is
+            always for one tenant. The devices view leads with the numbered <strong>pending</strong> queue
+            (devices waiting to be let in), then the enrolled keys; its title reads
+            <code>devices · &lt;gateway&gt; · &lt;user&gt;</code>. Open it with <kbd>d</kbd> on the
+            picker's Local tab, or on a selected user in the gateway chooser. It needs a paired device: an
+            untrusted key can't read the list.
+          </p>
+          <div class="cmds">
+            <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>k</kbd>/<kbd>j</kbd></code><span class="d">Move between keys.</span></div>
+            <div class="row"><code><kbd>Enter</kbd></code><span class="d"><b>Approve</b> the selected pending key (optionally labelling it). Confirms first, naming the full fingerprint.</span></div>
+            <div class="row"><code><kbd>x</kbd></code><span class="d"><b>Revoke</b> an enrolled key, or drop a pending knock. Also confirms — and warns separately if the key is <em>this</em> device's, which would lock you out.</span></div>
+            <div class="row"><code><kbd>q</kbd></code><span class="d">Back.</span></div>
+          </div>
+          <p style="margin-top:16px">
+            The same three actions exist as commands, over the same list — use whichever fits:
+          </p>
+          <pre><span class="p">$</span> clawee devices                                    <span class="mut"># pending knocks + enrolled keys, for the current user</span>
+<span class="p">$</span> clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># bare = first asking, #N = pending index, or a fingerprint</span>
+<span class="p">$</span> clawee devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
+          <p style="margin-top:8px; color:var(--dim)">
+            <code>approve</code> prints the resolved fingerprint it just enrolled — quote that line back if
+            you need to prove which key it was.
+          </p>
+          <p style="margin-top:16px">
+            The daemon side has the same three verbs, host-local, on the box running <code>claweed</code> —
+            they act on the <em>invoking</em> user only (a cross-user <code>manage</code> is referenced in
+            claweed's own help text but is not yet built — don't reach for it):
+          </p>
+          <pre><span class="p">$</span> claweed devices                                    <span class="mut"># pending knocks + enrolled keys, host-local</span>
+<span class="p">$</span> claweed devices approve [&lt;#&gt;|&lt;fp&gt;] [--label &lt;x&gt;]  <span class="mut"># same semantics as clawee's</span>
+<span class="p">$</span> claweed devices revoke &lt;fp&gt;                         <span class="mut"># remove a key or drop a knock</span></pre>
+          <p style="margin-top:16px; color:var(--dim)">
+            Revoking a device stops it opening <em>new</em> sessions immediately. A session it already has
+            attached keeps running until its next reconnect — three consecutive auth refusals during that
+            reconnect now bail the retry loop and drop back to the <a href="#pairing">pairing view</a>
+            instead of redialing forever behind a silent <code>reconnecting…</code>.
+          </p>
+        </section>
+
+        <!-- CLI REFERENCE -->
+        <section id="reference">
+          <p class="section-h">Reference</p>
+          <h2>CLI reference</h2>
+          <p>Verbatim help pages for the device verbs, generated by <code>clawee docs</code> / <code>claweed docs</code> from each binary's own help renderer.</p>
+
+          <h3 id="cli-devices">clawee devices</h3>
+          <!-- cli-embed: clawee devices -->
+<p class="mut">enroll + manage device keys on the gateway</p>
+<pre class="help">clawee devices — enroll + manage device keys on the gateway
+
+Usage:
+  clawee devices &lt;list|approve|revoke&gt;
+
+Commands:
+  list                          enrolled keys + the numbered pending queue (numbers are approve
+                                indices)
+  approve                       approve a pending knock (bare = the first asking key)
+            &lt;#&gt;                 the pending knock at that number in the queue
+            &lt;fp&gt;                the pending knock with that exact SHA256: fingerprint
+            [--label &lt;label&gt;]   label for the enrolled key (single token, [A-Za-z0-9._-]{0,32})
+  revoke                        drop an enrolled key or a pending knock
+            &lt;fp&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-devices-list">clawee devices list</h3>
+          <!-- cli-embed: clawee devices list -->
+<p class="mut">enrolled keys + the numbered pending queue (numbers are approve indices)</p>
+<pre class="help">clawee devices list — enrolled keys + the numbered pending queue (numbers are approve indices)
+
+Usage:
+  clawee devices list</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-devices-approve">clawee devices approve</h3>
+          <!-- cli-embed: clawee devices approve -->
+<p class="mut">approve a pending knock (bare = the first asking key)</p>
+<pre class="help">clawee devices approve — approve a pending knock (bare = the first asking key)
+
+Usage:
+  clawee devices approve [&lt;#&gt;|&lt;fp&gt;] [flags]
+
+  approve
+            &lt;#&gt;                 the pending knock at that number in the queue
+            &lt;fp&gt;                the pending knock with that exact SHA256: fingerprint
+            [--label &lt;label&gt;]   label for the enrolled key (single token, [A-Za-z0-9._-]{0,32})</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-devices-revoke">clawee devices revoke</h3>
+          <!-- cli-embed: clawee devices revoke -->
+<p class="mut">drop an enrolled key or a pending knock</p>
+<pre class="help">clawee devices revoke — drop an enrolled key or a pending knock
+
+Usage:
+  clawee devices revoke &lt;fp&gt;
+
+  revoke
+           &lt;fp&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-devices">claweed devices</h3>
+          <!-- cli-embed: claweed devices -->
+<p class="mut">manage device keys host-locally (invoking user only)</p>
+<pre class="help">claweed devices — manage device keys host-locally (invoking user only)
+
+Usage:
+  claweed devices &lt;command&gt;
+
+Commands:
+  list                           enrolled keys + the numbered pending queue (numbers are approve
+                                 indices)
+            [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+  approve                        approve a pending knock (bare = the first asking key)
+            &lt;#&gt;                  the pending knock at that number in the queue
+            &lt;fp&gt;                 the pending knock with that exact SHA256: fingerprint
+            [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+            [--label &lt;label&gt;]    label for the enrolled key ([A-Za-z0-9._-]{0,32})
+  revoke                         drop an enrolled key or a pending knock
+            &lt;fp&gt;
+            [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-devices-list">claweed devices list</h3>
+          <!-- cli-embed: claweed devices list -->
+<p class="mut">enrolled keys + the numbered pending queue (numbers are approve indices)</p>
+<pre class="help">claweed devices list — enrolled keys + the numbered pending queue (numbers are approve indices)
+
+Usage:
+  claweed devices list [flags]
+
+  list
+         [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid default
+                              (system root as root, ~/.clawee/data otherwise))</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-devices-approve">claweed devices approve</h3>
+          <!-- cli-embed: claweed devices approve -->
+<p class="mut">approve a pending knock (bare = the first asking key)</p>
+<pre class="help">claweed devices approve — approve a pending knock (bare = the first asking key)
+
+Usage:
+  claweed devices approve [&lt;#&gt;|&lt;fp&gt;] [flags]
+
+  approve
+            &lt;#&gt;                  the pending knock at that number in the queue
+            &lt;fp&gt;                 the pending knock with that exact SHA256: fingerprint
+            [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid
+                                 default (system root as root, ~/.clawee/data otherwise))
+            [--label &lt;label&gt;]    label for the enrolled key ([A-Za-z0-9._-]{0,32})</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-devices-revoke">claweed devices revoke</h3>
+          <!-- cli-embed: claweed devices revoke -->
+<p class="mut">drop an enrolled key or a pending knock</p>
+<pre class="help">claweed devices revoke — drop an enrolled key or a pending knock
+
+Usage:
+  claweed devices revoke &lt;fp&gt; [flags]
+
+  revoke
+           &lt;fp&gt;
+           [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid
+                                default (system root as root, ~/.clawee/data otherwise))</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-tenant-add">claweed tenant add</h3>
+          <!-- cli-embed: claweed tenant add -->
+<p class="mut">enroll a trust key for YOURSELF</p>
+<pre class="help">claweed tenant add — enroll a trust key for YOURSELF
+
+Usage:
+  claweed tenant add &lt;pubkey|@file&gt; [flags]
+
+  add
+        &lt;pubkey&gt;             the public key line itself
+        @&lt;file&gt;              read the public key from the named file
+        [--data-dir &lt;dir&gt;]   claweed data dir (required; `claweed auth` resolves a default)</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-claweed-auth">claweed auth</h3>
+          <!-- cli-embed: claweed auth -->
+<p class="mut">pair a device key (sugar over tenant add)</p>
+<pre class="help">claweed auth — pair a device key (sugar over tenant add)
+
+Usage:
+  claweed auth &lt;pubkey|@file&gt; [flags]
+
+  auth
+         &lt;pubkey|@file&gt;
+         [--data-dir &lt;dir&gt;]   claweed data dir (default: installed boot unit, then the euid default
+                              (system root as root, ~/.clawee/data otherwise))</pre>
+<!-- /cli-embed -->
+
+          <p style="margin-top:16px">
+            See the full generated references: <a href="/docs/clawee">clawee CLI reference</a> ·
+            <a href="/docs/claweed">claweed CLI reference</a>.
+          </p>
+          <p style="margin-top:26px; color:var(--dim); font-size:13px">
+            <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+                 channel version, which would make this stamp claim a sync it never had. -->
+            Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>

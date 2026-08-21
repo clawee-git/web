@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>clawee docs — relays</title>
+  <meta name="description" content="Relay preference order, LAN auto-rank, the interactive relay list, and the relays verbs.">
+  <link rel="icon" type="image/svg+xml" href="/assets/clawee-icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/style.css?v=7">
+  <meta property="og:title" content="clawee docs — relays">
+  <meta property="og:description" content="Relay preference order, LAN auto-rank, the interactive relay list, and the relays verbs.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clawee.org/docs/relays">
+  <meta property="og:image" content="https://clawee.org/assets/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="clawee docs — relays">
+  <meta name="twitter:description" content="Relay preference order, LAN auto-rank, the interactive relay list, and the relays verbs.">
+  <meta name="twitter:image" content="https://clawee.org/assets/og.png">
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="/">
+        <img src="/assets/clawee-icon.svg" alt="">
+        <span>clawee<span class="dot">_</span></span>
+      </a>
+      <span class="spacer"></span>
+      <a class="link" href="/">Home</a>
+      <a class="link" href="https://burrowee.com">burrowee</a>
+      <a class="cta" href="/docs/quickstart#install">Install</a>
+    </div>
+  </header>
+
+  <main class="wrap docs-wide docs-layout">
+    <nav class="docs-side" aria-label="Docs">
+      <a href="/docs">Overview</a>
+      <a href="/docs/quickstart">Quick start</a>
+      <a href="/docs/sessions">Sessions &amp; keys</a>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays" class="active">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
+
+    <div class="help-layout">
+      <!-- TOC -->
+      <nav class="toc">
+        <p class="t">Contents</p>
+        <ul>
+          <li><a href="#relays">Relays</a></li>
+          <li><a href="#reference">CLI reference</a></li>
+          <li><a href="#cli-relays">clawee relays</a></li>
+          <li><a href="#cli-relays-list">clawee relays list</a></li>
+          <li><a href="#cli-relays-probe">clawee relays probe</a></li>
+          <li><a href="#cli-relays-priority">clawee relays priority</a></li>
+          <li><a href="#cli-relays-skip">clawee relays skip</a></li>
+          <li><a href="#cli-relays-use">clawee relays use</a></li>
+          <li><a href="#cli-relays-auto">clawee relays auto</a></li>
+          <li><a href="#cli-relays-gateway">clawee relays gateway</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc">
+        <!-- RELAYS -->
+        <section id="relays">
+          <p class="section-h">Reference</p>
+          <h1>Relays</h1>
+          <p>
+            A relay is the hop your session actually travels through. clawee keeps its own preference
+            order per gateway — LAN relays first, then your manual order — and dials the top row. It never
+            switches on its own: when the chosen relay stays unreachable, clawee tells you and opens the
+            list so <em>you</em> pick.
+          </p>
+          <div class="cmds">
+            <div class="row"><code>clawee relays</code><span class="d">Open the interactive list (piped: prints the table instead).</span></div>
+            <div class="row"><code>clawee relays list</code><span class="d">Print the table in effective dial order — <code># · RELAY · URL · WHERE · OBSERVED · STATUS</code>.</span></div>
+            <div class="row"><code>clawee relays probe</code><span class="d"><b>Probe every relay</b>, then print the table with what came back.</span></div>
+            <div class="row"><code>clawee relays priority &lt;id…&gt;</code><span class="d">Move the listed relays to the front of the manual order.</span></div>
+            <div class="row"><code>clawee relays skip &lt;id&gt;</code><span class="d">Never auto-dial that relay (at least one must stay enabled).</span></div>
+            <div class="row"><code>clawee relays use &lt;id&gt;</code><span class="d">Pin a relay to the front, ahead of the LAN-first order.</span></div>
+            <div class="row"><code>clawee relays auto</code><span class="d">Clear the pin — back to the automatic order, and re-probe.</span></div>
+            <div class="row"><code>clawee relays gateway [&lt;id&gt;]</code><span class="d">Show the gateways, or switch which one these relays belong to.</span></div>
+          </div>
+          <p style="margin-top:16px">
+            Ids accept an unambiguous prefix of the relay's gateway fingerprint. In the interactive list
+            (also reachable as <code>/relays</code> while attached, and with <kbd>l</kbd> from the picker):
+          </p>
+          <pre><span class="mut">relays    ↑↓ move · K/J prio · s skip · u pin · a auto · p probe · ⏎ choose</span>
+
+<span class="mut">    #  URL                  STATUS       LAT    TTL             TYPE</span>
+<span class="p">▸</span>   1  relay.example:8448   reachable    28ms   4m12s           system   📌 pinned
+    2  10.0.0.4:8448 (lan)  reachable    2ms    9m58s           edge
+    3  relay-b.example:844  unreachable  —      cooldown 38m0s  system</pre>
+          <p>
+            <b>STATUS</b> is what the last probe saw, <b>LAT</b> its round-trip, <b>TTL</b> how long that
+            reading stays fresh (or the cooldown left on a failing relay), <b>TYPE</b> whether the relay is
+            system-run or your own edge. Row 1 dials first, and a cooldown clears on a good probe.
+            Choosing a relay while attached <b>switches the live session</b> onto it — clawee drops the
+            stream and re-dials through the new relay, rather than waiting for the next reconnect.
+          </p>
+          <div class="cmds">
+            <div class="row"><code><kbd>↑</kbd><kbd>↓</kbd> · <kbd>k</kbd>/<kbd>j</kbd></code><span class="d">Move the selection.</span></div>
+            <div class="row"><code><kbd>K</kbd>/<kbd>J</kbd> · <kbd>+</kbd>/<kbd>-</kbd></code><span class="d">Raise / lower the selected relay's priority — the selection follows it.</span></div>
+            <div class="row"><code><kbd>s</kbd> · <kbd>u</kbd> · <kbd>a</kbd></code><span class="d">Skip · pin to the front · clear the pin and re-probe.</span></div>
+            <div class="row"><code><kbd>p</kbd></code><span class="d">Probe every relay now and repaint with the result.</span></div>
+            <div class="row"><code><kbd>Enter</kbd></code><span class="d">Pin the selected relay. In <code>/relays</code> and <code>clawee relays</code> that also switches the live session; in the gateway chooser's drill-down it pins and returns.</span></div>
+            <div class="row"><code><kbd>q</kbd> · <kbd>Esc</kbd></code><span class="d">Leave without pinning anything.</span></div>
+          </div>
+          <p style="margin-top:12px; color:var(--dim)">
+            The header bar has room for the common six — <kbd>+</kbd>/<kbd>-</kbd>, <kbd>q</kbd> and
+            <kbd>Esc</kbd> work but aren't printed there.
+          </p>
+          <p style="margin-top:12px">
+            This list edits relay order <em>within</em> one gateway; it doesn't switch between gateways.
+            To do that, leave with <kbd>q</kbd>/<kbd>Esc</kbd> and pick one in the
+            <a href="/docs/gateways">gateway chooser</a>, or run <code>clawee relays gateway &lt;id&gt;</code>.
+          </p>
+        </section>
+
+        <!-- CLI REFERENCE -->
+        <section id="reference">
+          <p class="section-h">Reference</p>
+          <h2>CLI reference</h2>
+          <p>Verbatim help pages for the <code>relays</code> verbs, generated by <code>clawee docs</code> from the binary's own help renderer.</p>
+
+          <h3 id="cli-relays">clawee relays</h3>
+          <!-- cli-embed: clawee relays -->
+<p class="mut">rank relays, LAN-first (bare: interactive list; piped: the table)</p>
+<pre class="help">clawee relays — rank relays, LAN-first (bare: interactive list; piped: the table)
+
+Usage:
+  clawee relays [&lt;command&gt;]
+
+Commands:
+  list                print the relay table in effective dial order
+  probe               probe every relay, then print the table
+  priority            move the listed relays to the front of the manual order
+             &lt;id…&gt;
+  skip                never auto-dial &lt;id&gt; (at least one relay must stay enabled)
+             &lt;id&gt;
+  use                 prefer &lt;id&gt; (pin to the front, ahead of LAN-auto)
+             &lt;id&gt;
+  auto                clear the pin — back to LAN-auto order (re-probes)
+  gateway             show gateways, or switch the active gateway (alias: gw)
+             [&lt;id&gt;]
+
+Ids accept an unambiguous prefix of the relay&#x27;s gateway fingerprint.
+Bare `clawee relays` opens the interactive list on a terminal, and prints the
+table when piped.</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-list">clawee relays list</h3>
+          <!-- cli-embed: clawee relays list -->
+<p class="mut">print the relay table in effective dial order</p>
+<pre class="help">clawee relays list — print the relay table in effective dial order
+
+Usage:
+  clawee relays list</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-probe">clawee relays probe</h3>
+          <!-- cli-embed: clawee relays probe -->
+<p class="mut">probe every relay, then print the table</p>
+<pre class="help">clawee relays probe — probe every relay, then print the table
+
+Usage:
+  clawee relays probe</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-priority">clawee relays priority</h3>
+          <!-- cli-embed: clawee relays priority -->
+<p class="mut">move the listed relays to the front of the manual order</p>
+<pre class="help">clawee relays priority — move the listed relays to the front of the manual order
+
+Usage:
+  clawee relays priority &lt;id…&gt;
+
+  priority
+             &lt;id…&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-skip">clawee relays skip</h3>
+          <!-- cli-embed: clawee relays skip -->
+<p class="mut">never auto-dial &lt;id&gt; (at least one relay must stay enabled)</p>
+<pre class="help">clawee relays skip — never auto-dial &lt;id&gt; (at least one relay must stay enabled)
+
+Usage:
+  clawee relays skip &lt;id&gt;
+
+  skip
+         &lt;id&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-use">clawee relays use</h3>
+          <!-- cli-embed: clawee relays use -->
+<p class="mut">prefer &lt;id&gt; (pin to the front, ahead of LAN-auto)</p>
+<pre class="help">clawee relays use — prefer &lt;id&gt; (pin to the front, ahead of LAN-auto)
+
+Usage:
+  clawee relays use &lt;id&gt;
+
+  use
+        &lt;id&gt;</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-auto">clawee relays auto</h3>
+          <!-- cli-embed: clawee relays auto -->
+<p class="mut">clear the pin — back to LAN-auto order (re-probes)</p>
+<pre class="help">clawee relays auto — clear the pin — back to LAN-auto order (re-probes)
+
+Usage:
+  clawee relays auto</pre>
+<!-- /cli-embed -->
+
+          <h3 id="cli-relays-gateway">clawee relays gateway</h3>
+          <!-- cli-embed: clawee relays gateway -->
+<p class="mut">show gateways, or switch the active gateway (alias: gw)</p>
+<pre class="help">clawee relays gateway — show gateways, or switch the active gateway (alias: gw)
+
+Usage:
+  clawee relays gateway [&lt;id&gt;]
+
+  gateway
+            [&lt;id&gt;]</pre>
+<!-- /cli-embed -->
+
+          <p style="margin-top:16px">
+            See the full generated references: <a href="/docs/clawee">clawee CLI reference</a> ·
+            <a href="/docs/claweed">claweed CLI reference</a>.
+          </p>
+          <p style="margin-top:26px; color:var(--dim); font-size:13px">
+            <!-- Static on purpose: NOT class="ver" — script.js rewrites those to the live
+                 channel version, which would make this stamp claim a sync it never had. -->
+            Docs synced <b>2026-08-21</b> against clawee v0.2.12 · claweed v0.2.4.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <a class="brand" href="/" style="gap:9px">
+        <img src="/assets/clawee-icon.svg" alt="" style="width:20px;height:20px">
+        <span style="font-size:14px">clawee</span>
+      </a>
+      <span class="spacer"></span>
+      <a href="/">Home</a>
+      <a href="/docs">Docs</a>
+      <a href="https://burrowee.com" target="_blank" rel="noopener">burrowee</a>
+    </div>
+  </footer>
+
+  <script src="/script.js?v=6"></script>
+</body>
+</html>
