@@ -250,7 +250,7 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           <div class="row"><code>--user &lt;user&gt;</code><span class="d">Gateway OS user to claim for this run.</span></div>
         </div>
         <p style="margin-top:16px; color:var(--dim)">
-          There is no <code>-r</code>/resume flag on the released binary — dropped from this page.
+          There is no <code>-r</code>/resume flag on the released binary.
         </p>
       </section>
 
@@ -441,7 +441,9 @@ key       SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           A remote session's state, on the Remote tab: <b>connected</b> (someone's attached) ·
           <b>idle</b> (alive, nobody attached) · <b>interrupted</b> (the holder is gone — a reboot or
           crash — but attaching <b>restores it</b>: the full retained scrollback replays, with a
-          <code>── session re-established ──</code> marker, naming what was running when it can) ·
+          <code>── session re-established · was running: &lt;cmd&gt; ──</code> marker when the daemon
+          knows the foreground command (bare <code>── session re-established ──</code> when it
+          doesn't; a <code>claude</code> session gets a <code>claude --continue</code> hint)) ·
           <b>exited</b> · <b>closed</b>.
         </p>
         <p style="margin-top:8px; color:var(--dim)">

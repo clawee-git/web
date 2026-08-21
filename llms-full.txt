@@ -17,13 +17,7 @@ Supported clients: macOS and Linux. A box that *hosts* sessions also runs `clawe
 
 ## Install
 
-Two components, each installed with a one-liner (fetched over TLS and signature-verified from release.clawee.org) and updated in place with its own `update` command.
-
-Client — your laptop / workstation:
-
-    curl -fsSL https://release.clawee.org/clawee/install.sh | sh
-    clawee update            # update in place; skips if current
-    clawee update --force    # reinstall the latest regardless
+Two components, each installed with a one-liner (fetched over TLS and signature-verified from release.clawee.org) and updated in place with its own `update` command. On a fresh setup, install the daemon on each box that hosts sessions first, then the client on the machines you drive them from.
 
 Daemon — boxes that host sessions:
 
@@ -31,6 +25,12 @@ Daemon — boxes that host sessions:
     claweed setup            # first run: doctor --fix, then bootstrap YOUR tenant keys from ~/.ssh/authorized_keys (consent-gated, idempotent)
     claweed update           # update in place; skips if current
     claweed update --force   # reinstall the latest regardless
+
+Client — your laptop / workstation:
+
+    curl -fsSL https://release.clawee.org/clawee/install.sh | sh
+    clawee update            # update in place; skips if current
+    clawee update --force    # reinstall the latest regardless
 
 **Upgrading is one-way.** Once a v0.2.x `clawee` writes `config.json` or a session's `meta.json` in the multi-user schema, an *older* clawee binary refuses the file outright rather than silently misreading it — there is no downgrade path. Rolling a fleet back means rolling its config back with it. On the daemon side, the instance id lives in the system config root (moved there by the v0.2.0 migration ladder) and is an auth-challenge input: a regenerated value silently refuses every already-enrolled device. `claweed` never generates one on its own — only the installer's migration adopts it — so treat that file as load-bearing, not disposable.
 
@@ -118,7 +118,7 @@ Run `clawee` with no arguments to open the session picker and attach. Flags tune
 - `--transport <mode>` — force transport: `auto` | `ws` | `quic` (empty = daemon default).
 - `--user <user>` — gateway OS user to claim for this run.
 
-There is no `-r`/resume flag on the released binary — dropped from this page.
+There is no `-r`/resume flag on the released binary.
 
 ## Commands
 
@@ -225,7 +225,7 @@ A failed `n` new-session or attach keeps you in the picker rather than exiting: 
 
 On the Remote tab the row actions differ — they act on the remote pty, not your local session: `t` restart · `x` stop · `d` detach · `r` rename · `p` purge · `l` relays.
 
-A remote session's state, on the Remote tab: **connected** (someone's attached) · **idle** (alive, nobody attached) · **interrupted** (the holder is gone — a reboot or crash — but attaching **restores it**: the full retained scrollback replays, with a `── session re-established ──` marker, naming what was running when it can) · **exited** · **closed**.
+A remote session's state, on the Remote tab: **connected** (someone's attached) · **idle** (alive, nobody attached) · **interrupted** (the holder is gone — a reboot or crash — but attaching **restores it**: the full retained scrollback replays, with a `── session re-established · was running: <cmd> ──` marker when the daemon knows the foreground command (bare `── session re-established ──` when it doesn't; a `claude` session gets a `claude --continue` hint)) · **exited** · **closed**.
 
 green = connected · blue = idle · gray = detached · **interrupted = attach to restore** · live = recency · size = total output · last col = who holds it
 
