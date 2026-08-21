@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=7">
+  <link rel="stylesheet" href="/style.css?v=8">
   <meta property="og:title" content="clawee docs — relays">
   <meta property="og:description" content="Relay preference order, LAN auto-rank, the interactive relay list, and the relays verbs.">
   <meta property="og:type" content="website">
@@ -42,17 +42,8 @@
       <a href="/docs/quickstart">Quick start</a>
       <a href="/docs/sessions">Sessions &amp; keys</a>
       <a href="/docs/gateways">Gateways &amp; users</a>
-      <a href="/docs/relays" class="active">Relays</a>
-      <a href="/docs/devices">Devices &amp; pairing</a>
-      <a href="/docs/daemon">The daemon</a>
-      <a href="/docs/clawee">clawee CLI</a>
-      <a href="/docs/claweed">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-      <!-- TOC -->
-      <nav class="toc">
-        <p class="t">Contents</p>
+      <details open>
+        <summary>Relays</summary>
         <ul>
           <li><a href="#relays">Relays</a></li>
           <li><a href="#reference">CLI reference</a></li>
@@ -65,9 +56,14 @@
           <li><a href="#cli-relays-auto">clawee relays auto</a></li>
           <li><a href="#cli-relays-gateway">clawee relays gateway</a></li>
         </ul>
-      </nav>
+      </details>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
 
-      <div class="doc">
+    <div class="doc">
         <!-- RELAYS -->
         <section id="relays">
           <p class="section-h">Reference</p>
@@ -242,7 +238,6 @@ Usage:
           </p>
         </section>
       </div>
-    </div>
   </main>
 
   <footer>

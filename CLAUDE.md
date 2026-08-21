@@ -14,10 +14,18 @@
   `docs/{clawee,claweed}/cli-help.md` (byte-identical to the released binaries'
   `docs/cli-help.md`), `style.css` (design system), `script.js` (copy buttons),
   `assets/` (brand icon/mark from `clawee-git/resources/brand`).
-- **Docs chrome:** every docs page repeats the same static sidebar
-  (`.docs-side`, current page `class="active"`) inside
-  `<main class="wrap docs-wide docs-layout">`; same footer stamp on every page.
-  New page = new `docs/<name>/index.html` + a sidebar entry on ALL docs pages.
+- **Docs chrome:** one nav column, `.docs-side`, repeated static on every docs
+  page inside `<main class="wrap docs-wide docs-layout">` — no second in-page
+  TOC column. Non-active entries are plain `<a>`. The ACTIVE page's entry is a
+  native `<details open>` node: `<summary>` styled like the old active link
+  (plus a disclosure caret), with that page's own section links nested in a
+  `<ul>` underneath (same anchors/text that used to live in the page's
+  `.help-layout`/`.toc`) — zero JS, `.docs-side` scrolls
+  (`max-height: calc(100vh - 48px)`) so a long tree (the clawee/claweed
+  references) fits the sticky column. Per-page sidebars differ ONLY in which
+  entry is expanded. Same footer stamp on every page. New page =
+  new `docs/<name>/index.html` + a sidebar entry (plain, or expanded+nested
+  when that page carries its own sections) on ALL docs pages.
 - **Embedded CLI excerpts:** feature pages carry
   `<!-- cli-embed: <binary> <section> -->…<!-- /cli-embed -->` slots whose
   interiors are OWNED by `tools/embed-cli-help.py` (stdlib python, repo tooling,

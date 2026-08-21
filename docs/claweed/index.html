@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="../../style.css?v=7">
+  <link rel="stylesheet" href="../../style.css?v=8">
   <meta property="og:title" content="claweed — CLI reference">
   <meta property="og:description" content="The full claweed CLI reference, generated verbatim from the binary's own help renderer.">
   <meta property="og:type" content="website">
@@ -46,34 +46,30 @@
       <a href="/docs/devices">Devices &amp; pairing</a>
       <a href="/docs/daemon">The daemon</a>
       <a href="/docs/clawee">clawee CLI</a>
-      <a href="/docs/claweed" class="active">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-    <!-- TOC -->
-    <nav class="toc">
-      <p class="t">Contents</p>
-      <ul>
-        <li><a href="#claweed">claweed</a></li>
-        <li><a href="#claweed-serve">claweed serve</a></li>
-        <li><a href="#claweed-tenant">claweed tenant</a></li>
-        <li><a href="#claweed-tenant-add">claweed tenant add</a></li>
-        <li><a href="#claweed-auth">claweed auth</a></li>
-        <li><a href="#claweed-devices">claweed devices</a></li>
-        <li><a href="#claweed-devices-list">claweed devices list</a></li>
-        <li><a href="#claweed-devices-approve">claweed devices approve</a></li>
-        <li><a href="#claweed-devices-revoke">claweed devices revoke</a></li>
-        <li><a href="#claweed-service">claweed service</a></li>
-        <li><a href="#claweed-service-print">claweed service print</a></li>
-        <li><a href="#claweed-doctor">claweed doctor</a></li>
-        <li><a href="#claweed-status">claweed status</a></li>
-        <li><a href="#claweed-setup">claweed setup</a></li>
-        <li><a href="#claweed-restart">claweed restart</a></li>
-        <li><a href="#claweed-osmetrics">claweed osmetrics</a></li>
-        <li><a href="#claweed-update">claweed update</a></li>
-        <li><a href="#claweed-docs">claweed docs</a></li>
-        <li><a href="#claweed-version">claweed version</a></li>
-      </ul>
+      <details open>
+        <summary>claweed CLI</summary>
+        <ul>
+          <li><a href="#claweed">claweed</a></li>
+          <li><a href="#claweed-serve">claweed serve</a></li>
+          <li><a href="#claweed-tenant">claweed tenant</a></li>
+          <li><a href="#claweed-tenant-add">claweed tenant add</a></li>
+          <li><a href="#claweed-auth">claweed auth</a></li>
+          <li><a href="#claweed-devices">claweed devices</a></li>
+          <li><a href="#claweed-devices-list">claweed devices list</a></li>
+          <li><a href="#claweed-devices-approve">claweed devices approve</a></li>
+          <li><a href="#claweed-devices-revoke">claweed devices revoke</a></li>
+          <li><a href="#claweed-service">claweed service</a></li>
+          <li><a href="#claweed-service-print">claweed service print</a></li>
+          <li><a href="#claweed-doctor">claweed doctor</a></li>
+          <li><a href="#claweed-status">claweed status</a></li>
+          <li><a href="#claweed-setup">claweed setup</a></li>
+          <li><a href="#claweed-restart">claweed restart</a></li>
+          <li><a href="#claweed-osmetrics">claweed osmetrics</a></li>
+          <li><a href="#claweed-update">claweed update</a></li>
+          <li><a href="#claweed-docs">claweed docs</a></li>
+          <li><a href="#claweed-version">claweed version</a></li>
+        </ul>
+      </details>
     </nav>
 
     <div class="doc">
@@ -473,7 +469,6 @@ Usage:
   claweed version</pre>
       </section>
 
-    </div>
     </div>
   </main>
 

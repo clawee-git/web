@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="../../style.css?v=7">
+  <link rel="stylesheet" href="../../style.css?v=8">
   <meta property="og:title" content="clawee — CLI reference">
   <meta property="og:description" content="The full clawee CLI reference, generated verbatim from the binary's own help renderer.">
   <meta property="og:type" content="website">
@@ -45,41 +45,37 @@
       <a href="/docs/relays">Relays</a>
       <a href="/docs/devices">Devices &amp; pairing</a>
       <a href="/docs/daemon">The daemon</a>
-      <a href="/docs/clawee" class="active">clawee CLI</a>
+      <details open>
+        <summary>clawee CLI</summary>
+        <ul>
+          <li><a href="#clawee">clawee</a></li>
+          <li><a href="#clawee-status">clawee status</a></li>
+          <li><a href="#clawee-sessions">clawee sessions</a></li>
+          <li><a href="#clawee-gateway">clawee gateway</a></li>
+          <li><a href="#clawee-gateway-use">clawee gateway use</a></li>
+          <li><a href="#clawee-gateway-list">clawee gateway list</a></li>
+          <li><a href="#clawee-gateway-name">clawee gateway name</a></li>
+          <li><a href="#clawee-gateway-user">clawee gateway user</a></li>
+          <li><a href="#clawee-devices">clawee devices</a></li>
+          <li><a href="#clawee-devices-list">clawee devices list</a></li>
+          <li><a href="#clawee-devices-approve">clawee devices approve</a></li>
+          <li><a href="#clawee-devices-revoke">clawee devices revoke</a></li>
+          <li><a href="#clawee-relays">clawee relays</a></li>
+          <li><a href="#clawee-relays-list">clawee relays list</a></li>
+          <li><a href="#clawee-relays-probe">clawee relays probe</a></li>
+          <li><a href="#clawee-relays-priority">clawee relays priority</a></li>
+          <li><a href="#clawee-relays-skip">clawee relays skip</a></li>
+          <li><a href="#clawee-relays-use">clawee relays use</a></li>
+          <li><a href="#clawee-relays-auto">clawee relays auto</a></li>
+          <li><a href="#clawee-relays-gateway">clawee relays gateway</a></li>
+          <li><a href="#clawee-doctor">clawee doctor</a></li>
+          <li><a href="#clawee-update">clawee update</a></li>
+          <li><a href="#clawee-lock-passphrase">clawee lock-passphrase</a></li>
+          <li><a href="#clawee-docs">clawee docs</a></li>
+          <li><a href="#clawee-version">clawee version</a></li>
+        </ul>
+      </details>
       <a href="/docs/claweed">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-    <!-- TOC -->
-    <nav class="toc">
-      <p class="t">Contents</p>
-      <ul>
-        <li><a href="#clawee">clawee</a></li>
-        <li><a href="#clawee-status">clawee status</a></li>
-        <li><a href="#clawee-sessions">clawee sessions</a></li>
-        <li><a href="#clawee-gateway">clawee gateway</a></li>
-        <li><a href="#clawee-gateway-use">clawee gateway use</a></li>
-        <li><a href="#clawee-gateway-list">clawee gateway list</a></li>
-        <li><a href="#clawee-gateway-name">clawee gateway name</a></li>
-        <li><a href="#clawee-gateway-user">clawee gateway user</a></li>
-        <li><a href="#clawee-devices">clawee devices</a></li>
-        <li><a href="#clawee-devices-list">clawee devices list</a></li>
-        <li><a href="#clawee-devices-approve">clawee devices approve</a></li>
-        <li><a href="#clawee-devices-revoke">clawee devices revoke</a></li>
-        <li><a href="#clawee-relays">clawee relays</a></li>
-        <li><a href="#clawee-relays-list">clawee relays list</a></li>
-        <li><a href="#clawee-relays-probe">clawee relays probe</a></li>
-        <li><a href="#clawee-relays-priority">clawee relays priority</a></li>
-        <li><a href="#clawee-relays-skip">clawee relays skip</a></li>
-        <li><a href="#clawee-relays-use">clawee relays use</a></li>
-        <li><a href="#clawee-relays-auto">clawee relays auto</a></li>
-        <li><a href="#clawee-relays-gateway">clawee relays gateway</a></li>
-        <li><a href="#clawee-doctor">clawee doctor</a></li>
-        <li><a href="#clawee-update">clawee update</a></li>
-        <li><a href="#clawee-lock-passphrase">clawee lock-passphrase</a></li>
-        <li><a href="#clawee-docs">clawee docs</a></li>
-        <li><a href="#clawee-version">clawee version</a></li>
-      </ul>
     </nav>
 
     <div class="doc">
@@ -518,7 +514,6 @@ Usage:
   clawee version</pre>
       </section>
 
-    </div>
     </div>
   </main>
 

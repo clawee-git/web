@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=7">
+  <link rel="stylesheet" href="/style.css?v=8">
   <meta property="og:title" content="clawee docs — devices &amp; pairing">
   <meta property="og:description" content="The device trust model: pairing-form states, knock/approve, the devices view, and clawee/claweed device verbs.">
   <meta property="og:type" content="website">
@@ -43,16 +43,8 @@
       <a href="/docs/sessions">Sessions &amp; keys</a>
       <a href="/docs/gateways">Gateways &amp; users</a>
       <a href="/docs/relays">Relays</a>
-      <a href="/docs/devices" class="active">Devices &amp; pairing</a>
-      <a href="/docs/daemon">The daemon</a>
-      <a href="/docs/clawee">clawee CLI</a>
-      <a href="/docs/claweed">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-      <!-- TOC -->
-      <nav class="toc">
-        <p class="t">Contents</p>
+      <details open>
+        <summary>Devices &amp; pairing</summary>
         <ul>
           <li><a href="#pairing">Pairing a device</a></li>
           <li><a href="#devices">Devices</a></li>
@@ -68,9 +60,13 @@
           <li><a href="#cli-claweed-tenant-add">claweed tenant add</a></li>
           <li><a href="#cli-claweed-auth">claweed auth</a></li>
         </ul>
-      </nav>
+      </details>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
 
-      <div class="doc">
+    <div class="doc">
         <!-- PAIRING -->
         <section id="pairing">
           <p class="section-h">Reference</p>
@@ -392,7 +388,6 @@ Usage:
           </p>
         </section>
       </div>
-    </div>
   </main>
 
   <footer>

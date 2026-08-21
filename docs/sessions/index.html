@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=7">
+  <link rel="stylesheet" href="/style.css?v=8">
   <meta property="og:title" content="clawee docs — sessions &amp; keys">
   <meta property="og:description" content="Attaching and its flags, the session picker, views &amp; keys, locking, the composer, and slash commands.">
   <meta property="og:type" content="website">
@@ -40,19 +40,8 @@
     <nav class="docs-side" aria-label="Docs">
       <a href="/docs">Overview</a>
       <a href="/docs/quickstart">Quick start</a>
-      <a href="/docs/sessions" class="active">Sessions &amp; keys</a>
-      <a href="/docs/gateways">Gateways &amp; users</a>
-      <a href="/docs/relays">Relays</a>
-      <a href="/docs/devices">Devices &amp; pairing</a>
-      <a href="/docs/daemon">The daemon</a>
-      <a href="/docs/clawee">clawee CLI</a>
-      <a href="/docs/claweed">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-      <!-- TOC -->
-      <nav class="toc">
-        <p class="t">Contents</p>
+      <details open>
+        <summary>Sessions &amp; keys</summary>
         <ul>
           <li><a href="#attach">Attaching</a></li>
           <li><a href="#keys">Views &amp; keys</a></li>
@@ -64,9 +53,16 @@
           <li><a href="#cli-sessions">clawee sessions</a></li>
           <li><a href="#cli-lock-passphrase">clawee lock-passphrase</a></li>
         </ul>
-      </nav>
+      </details>
+      <a href="/docs/gateways">Gateways &amp; users</a>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
 
-      <div class="doc">
+    <div class="doc">
         <!-- ATTACHING -->
         <section id="attach">
           <p class="section-h">Daily use</p>
@@ -397,7 +393,6 @@ Usage:
           </p>
         </section>
       </div>
-    </div>
   </main>
 
   <footer>

@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="/style.css?v=7">
+  <link rel="stylesheet" href="/style.css?v=8">
   <meta property="og:title" content="clawee docs — gateways &amp; users">
   <meta property="og:description" content="The multi-user gateway model, the tree chooser, the gateway verbs, and the client-config upgrade note.">
   <meta property="og:type" content="website">
@@ -41,18 +41,8 @@
       <a href="/docs">Overview</a>
       <a href="/docs/quickstart">Quick start</a>
       <a href="/docs/sessions">Sessions &amp; keys</a>
-      <a href="/docs/gateways" class="active">Gateways &amp; users</a>
-      <a href="/docs/relays">Relays</a>
-      <a href="/docs/devices">Devices &amp; pairing</a>
-      <a href="/docs/daemon">The daemon</a>
-      <a href="/docs/clawee">clawee CLI</a>
-      <a href="/docs/claweed">claweed CLI</a>
-    </nav>
-
-    <div class="help-layout">
-      <!-- TOC -->
-      <nav class="toc">
-        <p class="t">Contents</p>
+      <details open>
+        <summary>Gateways &amp; users</summary>
         <ul>
           <li><a href="#gateways">Gateways &amp; users</a></li>
           <li><a href="#config-upgrade">Client config upgrade</a></li>
@@ -63,9 +53,15 @@
           <li><a href="#cli-gateway-name">clawee gateway name</a></li>
           <li><a href="#cli-gateway-user">clawee gateway user</a></li>
         </ul>
-      </nav>
+      </details>
+      <a href="/docs/relays">Relays</a>
+      <a href="/docs/devices">Devices &amp; pairing</a>
+      <a href="/docs/daemon">The daemon</a>
+      <a href="/docs/clawee">clawee CLI</a>
+      <a href="/docs/claweed">claweed CLI</a>
+    </nav>
 
-      <div class="doc">
+    <div class="doc">
         <!-- GATEWAYS -->
         <section id="gateways">
           <p class="section-h">Reference</p>
@@ -225,7 +221,6 @@ Usage:
           </p>
         </section>
       </div>
-    </div>
   </main>
 
   <footer>
