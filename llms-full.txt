@@ -1074,7 +1074,7 @@ See the full generated references: [clawee CLI reference](https://clawee.org/doc
 
 Full generated CLI references, verbatim from each binary's own help renderer: https://clawee.org/docs/clawee (raw markdown: https://clawee.org/docs/clawee/cli-help.md) and https://clawee.org/docs/claweed (raw markdown: https://clawee.org/docs/claweed/cli-help.md).
 
-There is no `help` verb — help spellings are flags only: `-h` / `--h` / `-help` / `--help`. Every verb rejects stray arguments; a usage refusal exits `2` on clawee, `64` on claweed. Run `clawee <command> --help` for that command's own page (`clawee docs` prints the full reference as markdown) — or browse the full generated reference: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
+There is no `help` verb — help spellings are flags only: `-h` / `--h` / `-help` / `--help`. Every verb rejects stray arguments; a usage refusal exits `2` on clawee, `64` on claweed. Run `clawee <command> --help` or `claweed <command> --help` for that command's own page (`clawee docs` / `claweed docs` prints the full reference as markdown) — or browse the full generated reference: [clawee CLI reference](https://clawee.org/docs/clawee) · [claweed CLI reference](https://clawee.org/docs/claweed).
 
 ---
 
