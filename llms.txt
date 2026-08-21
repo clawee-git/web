@@ -6,7 +6,13 @@ clawee has two components: the **clawee** client (your laptop/workstation) and t
 
 ## Docs
 
-- [Docs](https://clawee.org/docs): requirements, install, pairing, and the full command reference
+- [Docs](https://clawee.org/docs): hub — overview and links to every page below
+- [Quick start](https://clawee.org/docs/quickstart): fresh machine to a running session — requirements, install, pair a device, attach
+- [Sessions & keys](https://clawee.org/docs/sessions): attach flags, the session picker, views & keys, locking, the composer, slash commands
+- [Gateways & users](https://clawee.org/docs/gateways): the multi-user gateway model, the tree chooser, the gateway verbs
+- [Relays](https://clawee.org/docs/relays): relay preference order, LAN auto-rank, the relays verbs
+- [Devices & pairing](https://clawee.org/docs/devices): the device trust model, knock/approve, revocation
+- [The daemon](https://clawee.org/docs/daemon): claweed operations — setup, doctor, update, service unit, tenants
 - [Full docs as plain text](https://clawee.org/llms-full.txt): the complete reference in one markdown file
 - [clawee CLI reference](https://clawee.org/docs/clawee): every clawee subcommand, generated verbatim from the binary's own help renderer — raw markdown: [cli-help.md](https://clawee.org/docs/clawee/cli-help.md) (best for agents)
 - [claweed CLI reference](https://clawee.org/docs/claweed): every claweed subcommand, generated verbatim from the binary's own help renderer — raw markdown: [cli-help.md](https://clawee.org/docs/claweed/cli-help.md) (best for agents)
