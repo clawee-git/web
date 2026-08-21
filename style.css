@@ -379,6 +379,7 @@ footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 30px 0 44
 }
 
 /* docs multi-page chrome */
+.wrap.docs-wide { max-width: 1240px; }
 .docs-layout { display: grid; grid-template-columns: 200px minmax(0,1fr); gap: 34px; align-items: start; }
 .docs-side { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .docs-side a { color: var(--muted); padding: 5px 10px; border-radius: 6px; text-decoration: none; }
